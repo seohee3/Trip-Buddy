@@ -395,3 +395,11 @@ textarea {
   color: #5c3dff;
   font-weight: bold;
 }
+
+.text-input {
+  width: 100%;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 14px;
+}

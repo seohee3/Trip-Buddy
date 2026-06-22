@@ -116,12 +116,14 @@
       <header class="profile-header">
         <button id="backToMy" class="back-btn">←</button>
         <h2>여행 기록</h2>
-        <button class="save-btn">완료</button>
+        <button id="saveRecordBtn" class="save-btn">완료</button>
       </header>
 
       <div class="form-card">
         <label>방문 일정</label>
-        <button id="openCalendar" class="date-btn">2026.05.20 ~ 2026.05.25</button>
+        <button id="openCalendar" class="date-btn">
+          <span id="selectedDateText">2026.05.20 ~ 2026.05.25</span>
+        </button>
 
         <label>사진 추가</label>
         <div class="upload-row">
@@ -131,7 +133,11 @@
         </div>
 
         <label>글 작성</label>
-        <textarea placeholder="오늘의 여행 기록을 남겨보세요."></textarea>
+        <label>여행 제목</label>
+        <input id="recordTitle" class="text-input" placeholder="예: 제주도 여행" />
+        <textarea id="recordContent" placeholder="오늘의 여행 기록을 남겨보세요."></textarea>
+        
+        
 
         <label>공개 설정</label>
         <div class="radio-box selected">현재 공개</div>
@@ -143,33 +149,32 @@
       <header class="profile-header">
         <button id="backToRecord" class="back-btn">←</button>
         <h2>방문 일정</h2>
-        <button class="save-btn">완료</button>
+        <button id="calendarDoneBtn" class="save-btn">완료</button>
       </header>
 
       <div class="calendar-card">
         <div class="date-range">
-          <div>
-            <span>시작일</span>
-            <strong>2026.05.20</strong>
-          </div>
-          <div>
-            <span>종료일</span>
-            <strong>2026.05.25</strong>
-          </div>
+            <div>
+                <span>시작일</span>
+                <strong id="startDateText">선택 전</strong>
+             </div>
+            <div>
+                <span>종료일</span>
+                <strong id="endDateText">선택 전</strong>
+            </div>
         </div>
-
         <h3>2026년 5월</h3>
 
         <div class="calendar-grid">
-          <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
-          <button></button><button></button><button></button><button></button><button>1</button><button>2</button><button>3</button>
-          <button>4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><button>10</button>
-          <button>11</button><button>12</button><button>13</button><button>14</button><button>15</button><button>16</button><button>17</button>
-          <button>18</button><button>19</button><button class="picked">20</button><button class="range">21</button><button class="range">22</button><button>23</button><button>24</button>
-          <button class="picked">25</button><button>26</button><button>27</button><button>28</button><button>29</button><button>30</button><button>31</button>
+            <button></button><button></button><button></button><button></button>
+            <button data-day="1">1</button><button data-day="2">2</button><button data-day="3">3</button>
+            <button data-day="4">4</button><button data-day="5">5</button><button data-day="6">6</button><button data-day="7">7</button><button data-day="8">8</button><button data-day="9">9</button><button data-day="10">10</button>
+            <button data-day="11">11</button><button data-day="12">12</button><button data-day="13">13</button><button data-day="14">14</button><button data-day="15">15</button><button data-day="16">16</button><button data-day="17">17</button>
+            <button data-day="18">18</button><button data-day="19">19</button><button data-day="20">20</button><button data-day="21">21</button><button data-day="22">22</button><button data-day="23">23</button><button data-day="24">24</button>
+            <button data-day="25">25</button><button data-day="26">26</button><button data-day="27">27</button><button data-day="28">28</button><button data-day="29">29</button><button data-day="30">30</button><button data-day="31">31</button>
         </div>
 
-        <button class="submit-btn">저장하기</button>
+        <button id="calendarSaveBtn" class="submit-btn">저장하기</button>
       </div>
     </section>
 
