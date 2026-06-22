@@ -1,0 +1,36 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+}
+
+header {
+    background-color: #4caf50;
+    color: white;
+    text-align: center;
+    padding: 15px;
+}
+
+main {
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+.record {
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+    margin-top: 10px;
+}
