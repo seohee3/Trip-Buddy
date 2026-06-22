@@ -1,53 +1,184 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Buddy</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trip Buddy</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="app">
+    <section id="nearby" class="screen active">
+      <div class="top-bar">
+        <select>
+          <option>서울특별시</option>
+          <option>부산광역시</option>
+          <option>제주특별자치도</option>
+        </select>
+        <button class="back-btn">←</button>
+      </div>
 
-    <header>
-        <h1>Trip Buddy</h1>
-    </header>
+      <h2>주변</h2>
 
-    <main>
-        <section class="card">
-            <h2>📍 주변 관광지</h2>
+      <div class="tabs">
+        <button class="tab active">추천순</button>
+        <button class="tab">거리순</button>
+        <button class="tab">인기순</button>
+      </div>
 
-            <button id="locationBtn">
-                현재 위치 가져오기
-            </button>
+      <div class="search-row">
+        <span>현재 위치 기준 3km 이내</span>
+        <button id="locationBtn">검색 🔍</button>
+      </div>
 
-            <ul>
-                <li>에버랜드 (1.2km)</li>
-                <li>한국민속촌 (2.4km)</li>
-                <li>광교호수공원 (3.1km)</li>
-            </ul>
-        </section>
+      <div class="map-box">
+        <div class="map-dot blue"></div>
+        <div class="map-dot green"></div>
+        <div class="map-dot red"></div>
+        <div class="map-dot yellow"></div>
+        <p>지도 영역</p>
+      </div>
 
-        <section class="card">
-            <h2>✈ 여행 기록</h2>
+      <div class="place-list">
+        <article class="place-card">
+          <div class="place-img img1"></div>
+          <div>
+            <h3>서울숲</h3>
+            <p>서울 성동구</p>
+            <span>⭐ 4.7 · 1.2km</span>
+          </div>
+        </article>
 
-            <button id="recordBtn">
-                여행 기록 추가
-            </button>
+        <article class="place-card">
+          <div class="place-img img2"></div>
+          <div>
+            <h3>한강공원</h3>
+            <p>공원 · 자연</p>
+            <span>⭐ 4.6 · 1.8km</span>
+          </div>
+        </article>
 
-            <div class="record">
-                <h3>제주도 여행</h3>
-                <p>2026.06.10 ~ 2026.06.13</p>
-            </div>
+        <article class="place-card">
+          <div class="place-img img3"></div>
+          <div>
+            <h3>성수동 카페거리</h3>
+            <p>카페 · 맛집</p>
+            <span>⭐ 4.5 · 2.1km</span>
+          </div>
+        </article>
+      </div>
+    </section>
 
-            <div class="record">
-                <h3>부산 여행</h3>
-                <p>2026.05.03 ~ 2026.05.05</p>
-            </div>
+    <section id="my" class="screen">
+      <header class="profile-header">
+        <button class="back-btn">←</button>
+        <h2>마이페이지</h2>
+      </header>
 
-        </section>
-    </main>
+      <div class="profile">
+        <div class="avatar">🐶</div>
+        <div>
+          <h3>모리토리</h3>
+          <p>여행을 좋아하는 모리토리</p>
+        </div>
+      </div>
 
-    <script src="app.js"></script>
+      <div class="profile-buttons">
+        <button>프로필 편집</button>
+        <button id="openRecordForm">+ 여행 기록 추가</button>
+      </div>
 
+      <div class="stats">
+        <div><strong>23</strong><span>게시물</span></div>
+        <div><strong>7</strong><span>동행</span></div>
+        <div><strong>48</strong><span>방문 장소</span></div>
+      </div>
+
+      <div class="menu-grid">
+        <button>여행 지도</button>
+        <button>마스코트 도감</button>
+      </div>
+
+      <div class="photo-grid">
+        <div class="photo p1"></div>
+        <div class="photo p2"></div>
+        <div class="photo p3"></div>
+        <div class="photo p4"></div>
+        <div class="photo p5"></div>
+        <div class="photo p6"></div>
+      </div>
+    </section>
+
+    <section id="record" class="screen">
+      <header class="profile-header">
+        <button id="backToMy" class="back-btn">←</button>
+        <h2>여행 기록</h2>
+        <button class="save-btn">완료</button>
+      </header>
+
+      <div class="form-card">
+        <label>방문 일정</label>
+        <button id="openCalendar" class="date-btn">2026.05.20 ~ 2026.05.25</button>
+
+        <label>사진 추가</label>
+        <div class="upload-row">
+          <div class="upload-photo"></div>
+          <div class="upload-photo"></div>
+          <button class="add-photo">+</button>
+        </div>
+
+        <label>글 작성</label>
+        <textarea placeholder="오늘의 여행 기록을 남겨보세요."></textarea>
+
+        <label>공개 설정</label>
+        <div class="radio-box selected">현재 공개</div>
+        <div class="radio-box">나만 보기</div>
+      </div>
+    </section>
+
+    <section id="calendar" class="screen">
+      <header class="profile-header">
+        <button id="backToRecord" class="back-btn">←</button>
+        <h2>방문 일정</h2>
+        <button class="save-btn">완료</button>
+      </header>
+
+      <div class="calendar-card">
+        <div class="date-range">
+          <div>
+            <span>시작일</span>
+            <strong>2026.05.20</strong>
+          </div>
+          <div>
+            <span>종료일</span>
+            <strong>2026.05.25</strong>
+          </div>
+        </div>
+
+        <h3>2026년 5월</h3>
+
+        <div class="calendar-grid">
+          <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          <button></button><button></button><button></button><button></button><button>1</button><button>2</button><button>3</button>
+          <button>4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><button>10</button>
+          <button>11</button><button>12</button><button>13</button><button>14</button><button>15</button><button>16</button><button>17</button>
+          <button>18</button><button>19</button><button class="picked">20</button><button class="range">21</button><button class="range">22</button><button>23</button><button>24</button>
+          <button class="picked">25</button><button>26</button><button>27</button><button>28</button><button>29</button><button>30</button><button>31</button>
+        </div>
+
+        <button class="submit-btn">저장하기</button>
+      </div>
+    </section>
+
+    <nav class="bottom-nav">
+      <button>홈</button>
+      <button>검색</button>
+      <button class="nav-active" data-target="nearby">주변</button>
+      <button>메이트</button>
+      <button data-target="my">MY</button>
+    </nav>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
