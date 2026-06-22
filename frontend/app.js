@@ -86,6 +86,7 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
   localStorage.setItem("travelRecords", JSON.stringify(records));
 
   alert("여행 기록이 저장되었습니다.");
+  renderTravelRecords();
 
   document.getElementById("recordTitle").value = "";
   document.getElementById("recordContent").value = "";
@@ -175,3 +176,54 @@ function saveCalendarDate() {
 
 document.getElementById("calendarDoneBtn").addEventListener("click", saveCalendarDate);
 document.getElementById("calendarSaveBtn").addEventListener("click", saveCalendarDate);
+function renderTravelRecords() {
+  const recordList = document.getElementById("recordList");
+  const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
+
+  recordList.innerHTML = "";
+
+  if (records.length === 0) {
+    recordList.innerHTML = `<p class="empty-text">아직 저장된 여행 기록이 없습니다.</p>`;
+    return;
+  }
+
+  records.forEach((record, index) => {
+    const card = document.createElement("div");
+    card.className = "record-card";
+
+    card.innerHTML = `
+        <div class="record-card-header">
+            <h4>${record.title}</h4>
+            <button class="delete-record-btn" data-index="${index}">삭제</button>
+        </div>
+        <p>${record.content || "작성된 내용이 없습니다."}</p>
+        <span>${record.date}</span>
+    `;
+
+    recordList.appendChild(card);
+});
+
+document.querySelectorAll(".delete-record-btn").forEach((button) => {
+  button.addEventListener("click", () => {
+    const index = Number(button.dataset.index);
+    deleteTravelRecord(index);
+  });
+});
+}
+
+renderTravelRecords();
+function deleteTravelRecord(index) {
+  const confirmed = confirm("이 여행 기록을 삭제하시겠습니까?");
+
+  if (!confirmed) return;
+
+  const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
+
+  records.splice(index, 1);
+
+  localStorage.setItem("travelRecords", JSON.stringify(records));
+
+  renderTravelRecords();
+
+  alert("여행 기록이 삭제되었습니다.");
+}

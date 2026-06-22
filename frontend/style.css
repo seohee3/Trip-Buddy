@@ -403,3 +403,55 @@ textarea {
   padding: 12px;
   font-size: 14px;
 }
+.section-title {
+  margin: 20px 0 10px;
+  font-size: 16px;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.record-card {
+  background: #fafafa;
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid #eee;
+}
+
+.record-card h4 {
+  margin: 0 0 6px;
+  color: #222;
+}
+
+.record-card p {
+  margin: 0 0 8px;
+  color: #777;
+  font-size: 13px;
+}
+
+.record-card span {
+  color: #5c3dff;
+  font-size: 12px;
+  font-weight: bold;
+}
+.record-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.delete-record-btn {
+  border: none;
+  background: #ffefef;
+  color: #d9534f;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
