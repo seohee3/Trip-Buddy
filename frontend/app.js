@@ -1,3 +1,4 @@
+const TOUR_API_KEY = "a2652d41b57533048e6566c0afca1ba6f190d1706286e228c74f843544f8d3a8";
 const screens = document.querySelectorAll(".screen");
 
 function showScreen(id) {
@@ -57,6 +58,8 @@ document.getElementById("locationBtn").addEventListener("click", () => {
       <br>
       경도: ${longitude.toFixed(6)}
       `;
+      fetchNearbyPlaces(latitude, longitude);
+
       console.log("위도:", latitude);
       console.log("경도:", longitude);
     },
@@ -79,7 +82,8 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
     title,
     content,
     date: document.getElementById("selectedDateText").textContent,
-  };
+    image: selectedImageData,
+};
 
   const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
   records.unshift(record);
@@ -91,15 +95,14 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
   document.getElementById("recordTitle").value = "";
   document.getElementById("recordContent").value = "";
 
+  selectedImageData = "";
+  document.getElementById("recordImageInput").value = "";
+  document.getElementById("imagePreview").textContent = "미리보기";
+  document.getElementById("imagePreview").style.backgroundImage = "";
+
   showScreen("my");
 });
-document.getElementById("calendarDoneBtn").addEventListener("click", () => {
-  showScreen("record");
-});
 
-document.getElementById("calendarSaveBtn").addEventListener("click", () => {
-  showScreen("record");
-});
 let selectedStartDay = null;
 let selectedEndDay = null;
 
@@ -192,13 +195,14 @@ function renderTravelRecords() {
     card.className = "record-card";
 
     card.innerHTML = `
-        <div class="record-card-header">
-            <h4>${record.title}</h4>
-            <button class="delete-record-btn" data-index="${index}">삭제</button>
-        </div>
-        <p>${record.content || "작성된 내용이 없습니다."}</p>
-        <span>${record.date}</span>
-    `;
+    ${record.image ? `<div class="record-image" style="background-image: url(${record.image})"></div>` : ""}
+    <div class="record-card-header">
+        <h4>${record.title}</h4>
+        <button class="delete-record-btn" data-index="${index}">삭제</button>
+    </div>
+    <p>${record.content || "작성된 내용이 없습니다."}</p>
+    <span>${record.date}</span>
+`;
 
     recordList.appendChild(card);
 });
@@ -226,4 +230,87 @@ function deleteTravelRecord(index) {
   renderTravelRecords();
 
   alert("여행 기록이 삭제되었습니다.");
+}
+let selectedImageData = "";
+
+document.getElementById("recordImageInput").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    selectedImageData = reader.result;
+
+    const preview = document.getElementById("imagePreview");
+    preview.textContent = "";
+    preview.style.backgroundImage = `url(${selectedImageData})`;
+  };
+
+  reader.readAsDataURL(file);
+});
+async function fetchNearbyPlaces(latitude, longitude) {
+  const url =
+    `https://apis.data.go.kr/B551011/KorService2/locationBasedList2` +
+    `?serviceKey=${TOUR_API_KEY}` +
+    `&MobileOS=ETC` +
+    `&MobileApp=TripBuddy` +
+    `&_type=json` +
+    `&mapX=${longitude}` +
+    `&mapY=${latitude}` +
+    `&radius=3000` +
+    `&arrange=E` +
+    `&numOfRows=10` +
+    `&pageNo=1`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    console.log(data);
+
+    const rawItems = data.response?.body?.items?.item || [];
+    const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+    renderNearbyPlaces(items);
+  } catch (error) {
+    console.error(error);
+    alert("주변 관광지 정보를 불러오지 못했습니다.");
+  }
+}
+
+function renderNearbyPlaces(items) {
+  const placeList = document.querySelector(".place-list");
+  placeList.innerHTML = "";
+
+  if (items.length === 0) {
+    placeList.innerHTML = `<p>주변 관광지 정보가 없습니다.</p>`;
+    return;
+  }
+
+  items.forEach((place) => {
+    const distanceKm = place.dist
+      ? (Number(place.dist) / 1000).toFixed(1)
+      : "-";
+
+    const imageUrl = place.firstimage || "";
+
+    const card = document.createElement("article");
+    card.className = "place-card";
+
+    card.innerHTML = `
+      ${
+        imageUrl
+          ? `<img class="place-api-img" src="${imageUrl}" alt="${place.title}">`
+          : `<div class="place-img img1"></div>`
+      }
+      <div>
+        <h3>${place.title}</h3>
+        <p>${place.addr1 || "주소 정보 없음"}</p>
+        <span>📍 ${distanceKm}km</span>
+      </div>
+    `;
+
+    placeList.appendChild(card);
+  });
 }

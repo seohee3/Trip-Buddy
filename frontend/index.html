@@ -129,10 +129,22 @@
 
         <label>사진 추가</label>
         <div class="upload-row">
-          <div class="upload-photo"></div>
-          <div class="upload-photo"></div>
-          <button class="add-photo">+</button>
+            <label class="upload-photo" for="recordImageInput">
+                <span>사진 선택</span>
+            </label>
+
+            <input
+                type="file"
+                id="recordImageInput"
+                accept="image/*"
+                hidden
+            />
+
+            <div id="imagePreview" class="image-preview">
+                미리보기
+            </div>
         </div>
+        
 
         <label>글 작성</label>
         <label>여행 제목</label>
