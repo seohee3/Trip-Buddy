@@ -27,11 +27,17 @@ body {
   display: block;
 }
 
-.top-bar,
-.profile-header {
+.top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 select,
@@ -492,4 +498,349 @@ textarea {
   border-radius: 12px;
   object-fit: cover;
   flex-shrink: 0;
+}
+.detail-image {
+  width: 100%;
+  height: 210px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #9ed0ff, #508fd6);
+  background-size: cover;
+  background-position: center;
+  margin: 18px 0;
+}
+
+.detail-card {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.detail-card h3 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.detail-card p {
+  color: #666;
+  font-size: 14px;
+}
+
+.detail-card span {
+  color: #5c3dff;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.detail-info {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #eee;
+}
+
+.place-card {
+  cursor: pointer;
+}
+.keyword-search {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.keyword-search input {
+  flex: 1;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.keyword-search button {
+  border: none;
+  background: #5c3dff;
+  color: white;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: bold;
+}
+.favorite-btn {
+  width: 100%;
+  border: none;
+  background: #fff0f3;
+  color: #e64980;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.record-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.record-grid-item {
+  height: 105px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #87ceeb, #20639b);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.record-grid-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  color: white;
+}
+
+.record-grid-overlay strong {
+  display: block;
+  font-size: 12px;
+}
+
+.record-grid-overlay span {
+  font-size: 10px;
+}
+
+.grid-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #d9534f;
+  border-radius: 8px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: bold;
+}
+.delete-favorite-btn {
+  border: none;
+  background: #ffefef;
+  color: #d9534f;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.write-record-btn {
+  width: 100%;
+  border: none;
+  background: #f1eefc;
+  color: #5c3dff;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.travel-map-card {
+  background: #fafafa;
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px solid #eee;
+}
+
+.travel-map-card h3 {
+  text-align: center;
+  color: #5c3dff;
+  margin-top: 0;
+}
+
+.korea-map-mock {
+  width: 260px;
+  height: 330px;
+  margin: 20px auto;
+  position: relative;
+  background: #eef0ff;
+  border-radius: 45% 45% 35% 35%;
+}
+
+.region {
+  position: absolute;
+  border-radius: 18px;
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #4b3a8f;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.region span {
+  font-size: 10px;
+  color: #666;
+}
+
+.korea-map-mock {
+  width: 285px;
+  height: 430px;
+  margin: 20px auto;
+  position: relative;
+  background: #eef0ff;
+  border-radius: 48% 48% 38% 38%;
+}
+
+.region {
+  position: absolute;
+  min-width: 52px;
+  border-radius: 16px;
+  padding: 8px 7px;
+  text-align: center;
+  font-size: 12px;
+  color: #27176f;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(92, 61, 255, 0.14);
+}
+
+.region span {
+  font-size: 10px;
+  color: #444;
+}
+
+.lv-region-0 { background: #f1edff; }
+.lv-region-1 { background: #cfc6ff; }
+.lv-region-2 { background: #a895ff; }
+.lv-region-3 { background: #5c3dff; color: white; }
+
+.lv-region-3 span {
+  color: white;
+}
+
+.r-incheon { top: 70px; left: 38px; }
+.r-seoul { top: 42px; left: 116px; }
+.r-gyeonggi { top: 112px; left: 105px; }
+.r-gangwon { top: 65px; right: 35px; }
+
+.r-chungbuk { top: 180px; left: 74px; }
+.r-chungnam { top: 178px; left: 145px; }
+
+.r-gyeongbuk { top: 180px; right: 20px; }
+.r-daegu { top: 250px; right: 14px; }
+.r-gyeongnam { top: 305px; right: 70px; }
+.r-busan { top: 360px; right: 70px; }
+
+.r-jeonbuk { top: 260px; left: 42px; }
+.r-gwangju { top: 320px; left: 20px; }
+.r-jeonnam { top: 365px; left: 90px; }
+
+.r-jeju { bottom: 8px; left: 122px; }
+
+
+.map-legend {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 12px;
+  color: #666;
+}
+
+.map-legend span {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #222;
+}
+
+.map-legend div {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.map-legend i {
+  display: inline-block;
+  width: 16px;
+  height: 10px;
+  border-radius: 4px;
+}
+
+.lv0 { background: #ece8ff; }
+.lv1 { background: #c8c0ff; }
+.lv2 { background: #9d8cff; }
+.lv3 { background: #5c3dff; }
+
+.profile-header .back-btn {
+  position: absolute;
+  left: 0;
+}
+
+.profile-header .save-btn {
+  position: absolute;
+  right: 0;
+}
+
+.profile-header h2 {
+  margin: 0;
+  text-align: center;
+}
+.mascot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.mascot-card {
+  background: #f3f0ff;
+  border-radius: 18px;
+  padding: 16px;
+  text-align: center;
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.mascot-card.unlocked {
+  opacity: 1;
+  filter: none;
+  background: #ede7ff;
+  border: 1px solid #c8c0ff;
+}
+
+.mascot-icon {
+  font-size: 38px;
+  margin-bottom: 8px;
+}
+
+.mascot-card strong {
+  display: block;
+  color: #5c3dff;
+  margin-bottom: 4px;
+}
+
+.mascot-card span {
+  font-size: 12px;
+  color: #666;
+}
+
+.profile-image-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+}
+
+.profile-edit-photo {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 20px;
 }

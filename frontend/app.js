@@ -1,5 +1,7 @@
 const TOUR_API_KEY = "a2652d41b57533048e6566c0afca1ba6f190d1706286e228c74f843544f8d3a8";
 const screens = document.querySelectorAll(".screen");
+let nearbyPlaces = [];
+let selectedPlace = null;
 
 function showScreen(id) {
   screens.forEach((screen) => {
@@ -39,13 +41,14 @@ document.getElementById("backToRecord").addEventListener("click", () => {
   showScreen("record");
 });
 
-document.getElementById("locationBtn").addEventListener("click", () => {
+function loadCurrentLocationAndPlaces() {
   if (!navigator.geolocation) {
     alert("이 브라우저에서는 위치 기능을 지원하지 않습니다.");
     return;
   }
 
-  alert("현재 위치를 가져오는 중입니다.");
+  document.getElementById("locationInfo").innerHTML =
+    "현재 위치를 불러오는 중입니다.";
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -53,11 +56,13 @@ document.getElementById("locationBtn").addEventListener("click", () => {
       const longitude = position.coords.longitude;
 
       document.getElementById("locationInfo").innerHTML =
-      `
-      위도: ${latitude.toFixed(6)}
-      <br>
-      경도: ${longitude.toFixed(6)}
-      `;
+        `
+        위도: ${latitude.toFixed(6)}
+        <br>
+        경도: ${longitude.toFixed(6)}
+        `;
+
+      updateRegionName(latitude, longitude);
       fetchNearbyPlaces(latitude, longitude);
 
       console.log("위도:", latitude);
@@ -65,10 +70,20 @@ document.getElementById("locationBtn").addEventListener("click", () => {
     },
     (error) => {
       console.error(error);
-      alert("위치 정보를 가져오지 못했습니다. 브라우저 위치 권한을 허용해주세요.");
+      document.getElementById("locationInfo").innerHTML =
+        "위치 정보를 가져오지 못했습니다. 위치 권한을 허용해주세요.";
     }
   );
+}
+
+document.getElementById("locationBtn").addEventListener("click", () => {
+  loadCurrentLocationAndPlaces();
 });
+
+window.addEventListener("load", () => {
+  loadCurrentLocationAndPlaces();
+});
+
 document.getElementById("saveRecordBtn").addEventListener("click", () => {
   const title = document.getElementById("recordTitle").value.trim();
   const content = document.getElementById("recordContent").value.trim();
@@ -83,7 +98,8 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
     content,
     date: document.getElementById("selectedDateText").textContent,
     image: selectedImageData,
-};
+    region: document.getElementById("recordRegion").value,
+  };
 
   const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
   records.unshift(record);
@@ -91,6 +107,9 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
 
   alert("여행 기록이 저장되었습니다.");
   renderTravelRecords();
+  updateMyStats();
+  updateTravelMapCounts();
+  updateMascotBook();
 
   document.getElementById("recordTitle").value = "";
   document.getElementById("recordContent").value = "";
@@ -191,31 +210,38 @@ function renderTravelRecords() {
   }
 
   records.forEach((record, index) => {
-    const card = document.createElement("div");
-    card.className = "record-card";
+    const item = document.createElement("div");
+    item.className = "record-grid-item";
 
-    card.innerHTML = `
-    ${record.image ? `<div class="record-image" style="background-image: url(${record.image})"></div>` : ""}
-    <div class="record-card-header">
-        <h4>${record.title}</h4>
-        <button class="delete-record-btn" data-index="${index}">삭제</button>
-    </div>
-    <p>${record.content || "작성된 내용이 없습니다."}</p>
-    <span>${record.date}</span>
-`;
+    if (record.image) {
+      item.style.backgroundImage = `url(${record.image})`;
+    }
 
-    recordList.appendChild(card);
-});
-
-document.querySelectorAll(".delete-record-btn").forEach((button) => {
-  button.addEventListener("click", () => {
-    const index = Number(button.dataset.index);
-    deleteTravelRecord(index);
+    item.innerHTML = `
+      <button class="grid-delete-btn" data-index="${index}">삭제</button>
+      <div class="record-grid-overlay">
+        <strong>${record.title}</strong>
+        <span>${record.date}</span>
+      </div>
+    `;
+    item.addEventListener("click", () => {
+    openRecordDetail(record);
+    });
+    recordList.appendChild(item);
   });
-});
+
+  document.querySelectorAll(".grid-delete-btn").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+
+      const index = Number(button.dataset.index);
+      deleteTravelRecord(index);
+    });
+  });
 }
 
 renderTravelRecords();
+updateMyStats();
 function deleteTravelRecord(index) {
   const confirmed = confirm("이 여행 기록을 삭제하시겠습니까?");
 
@@ -230,6 +256,9 @@ function deleteTravelRecord(index) {
   renderTravelRecords();
 
   alert("여행 기록이 삭제되었습니다.");
+  updateMyStats();
+  updateTravelMapCounts();
+  updateMascotBook();
 }
 let selectedImageData = "";
 
@@ -272,7 +301,9 @@ async function fetchNearbyPlaces(latitude, longitude) {
 
     const rawItems = data.response?.body?.items?.item || [];
     const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+    nearbyPlaces = items;
     renderNearbyPlaces(items);
+    updateKakaoMap(latitude, longitude, items);
   } catch (error) {
     console.error(error);
     alert("주변 관광지 정보를 불러오지 못했습니다.");
@@ -311,6 +342,551 @@ function renderNearbyPlaces(items) {
       </div>
     `;
 
+    card.addEventListener("click", () => {
+      openPlaceDetail(place);
+    });
     placeList.appendChild(card);
   });
 }
+function openPlaceDetail(place) {
+  selectedPlace = place;
+  const title = place.title || "관광지 이름";
+  const address = place.addr1 || "주소 정보 없음";
+  const distanceKm = place.dist
+    ? (Number(place.dist) / 1000).toFixed(1)
+    : "-";
+  const imageUrl = place.firstimage || "";
+
+  document.getElementById("detailTitle").textContent = title;
+  document.getElementById("detailAddress").textContent = address;
+  document.getElementById("detailDistance").textContent = `📍 ${distanceKm}km`;
+
+  document.getElementById("detailDescription").textContent =
+    `${title}은(는) 현재 위치 기준 주변 관광지 목록에서 조회된 장소입니다. 상세 소개 정보는 이후 관광공사 상세 API를 연결하여 확장할 수 있습니다.`;
+
+  const detailImage = document.getElementById("detailImage");
+
+  if (imageUrl) {
+    detailImage.style.backgroundImage = `url(${imageUrl})`;
+  } else {
+    detailImage.style.backgroundImage = "";
+  }
+  fetchPlaceDetailIntro(place.contentid, place.contenttypeid);
+
+  showScreen("placeDetail");
+}
+
+document.getElementById("backToNearby").addEventListener("click", () => {
+  showScreen("nearby");
+});
+
+async function fetchPlaceDetailIntro(contentId, contentTypeId) {
+  const fallbackText = document.getElementById("detailDescription").textContent;
+
+  if (!contentId) {
+    document.getElementById("detailDescription").textContent = fallbackText;
+    return;
+  }
+
+  const url =
+    `https://apis.data.go.kr/B551011/KorService2/detailCommon2` +
+    `?serviceKey=${TOUR_API_KEY}` +
+    `&MobileOS=ETC` +
+    `&MobileApp=TripBuddy` +
+    `&_type=json` +
+    `&contentId=${contentId}` +
+    `&defaultYN=Y` +
+    `&overviewYN=Y` +
+    `&addrinfoYN=Y` +
+    `&mapinfoYN=Y` +
+    `&firstImageYN=Y`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    console.log("공통 상세 정보:", data);
+
+    const item = data.response?.body?.items?.item?.[0];
+
+    if (!item || !item.overview) {
+      return;
+    }
+
+    document.getElementById("detailDescription").innerHTML =
+      item.overview;
+  } catch (error) {
+    console.error(error);
+  }
+}
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+
+    document.querySelectorAll(".tab").forEach((btn) => {
+      btn.classList.remove("active");
+    });
+
+    tab.classList.add("active");
+
+    const tabText = tab.textContent.trim();
+
+    let sortedPlaces = [...nearbyPlaces];
+
+    if (tabText === "거리순") {
+
+      sortedPlaces.sort((a, b) => {
+        return Number(a.dist || 999999) -
+               Number(b.dist || 999999);
+      });
+
+    } else if (tabText === "인기순") {
+
+      sortedPlaces.sort((a, b) => {
+        return a.title.localeCompare(b.title);
+      });
+
+    }
+
+    renderNearbyPlaces(sortedPlaces);
+  });
+});
+document.getElementById("nearbyKeywordBtn").addEventListener("click", () => {
+  const keyword = document.getElementById("nearbyKeywordInput").value.trim();
+
+  if (!keyword) {
+    alert("검색어를 입력해주세요.");
+    return;
+  }
+
+  searchNearbyKeyword(keyword);
+});
+
+async function searchNearbyKeyword(keyword) {
+  const url =
+    `https://apis.data.go.kr/B551011/KorService2/searchKeyword2` +
+    `?serviceKey=${TOUR_API_KEY}` +
+    `&MobileOS=ETC` +
+    `&MobileApp=TripBuddy` +
+    `&_type=json` +
+    `&keyword=${encodeURIComponent(keyword)}` +
+    `&numOfRows=10` +
+    `&pageNo=1`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    console.log("키워드 검색 결과:", data);
+
+    const rawItems = data.response?.body?.items?.item || [];
+    const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+
+    nearbyPlaces = items;
+    renderNearbyPlaces(items);
+  } catch (error) {
+    console.error(error);
+    alert("검색 결과를 불러오지 못했습니다.");
+  }
+}
+document.getElementById("nearbyKeywordInput").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    document.getElementById("nearbyKeywordBtn").click();
+  }
+});
+document.getElementById("favoritePlaceBtn").addEventListener("click", () => {
+  if (!selectedPlace) {
+    alert("찜할 관광지를 선택해주세요.");
+    return;
+  }
+
+  const favorites = JSON.parse(localStorage.getItem("favoritePlaces")) || [];
+
+  const alreadySaved = favorites.some(
+    (place) => place.contentid === selectedPlace.contentid
+  );
+
+  if (alreadySaved) {
+    alert("이미 찜한 관광지입니다.");
+    return;
+  }
+
+  favorites.unshift(selectedPlace);
+  localStorage.setItem("favoritePlaces", JSON.stringify(favorites));
+
+  renderFavoritePlaces();
+  updateMyStats();
+
+  alert("찜한 관광지에 저장되었습니다.");
+});
+
+function renderFavoritePlaces() {
+  const favoriteList = document.getElementById("favoritePlaceList");
+  const favorites = JSON.parse(localStorage.getItem("favoritePlaces")) || [];
+
+  favoriteList.innerHTML = "";
+
+  if (favorites.length === 0) {
+    favoriteList.innerHTML = `<p class="empty-text">아직 찜한 관광지가 없습니다.</p>`;
+    return;
+  }
+
+  favorites.forEach((place, index) => {
+    const card = document.createElement("div");
+    card.className = "record-card";
+
+    card.innerHTML = `
+      <div class="record-card-header">
+        <h4>${place.title}</h4>
+        <button class="delete-favorite-btn" data-index="${index}">삭제</button>
+      </div>
+      <p>${place.addr1 || "주소 정보 없음"}</p>
+      <span>찜한 관광지</span>
+    `;
+
+    favoriteList.appendChild(card);
+  });
+
+  document.querySelectorAll(".delete-favorite-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.index);
+      deleteFavoritePlace(index);
+    });
+  });
+}
+
+renderFavoritePlaces();
+function deleteFavoritePlace(index) {
+  const confirmed = confirm("이 찜한 관광지를 삭제하시겠습니까?");
+
+  if (!confirmed) return;
+
+  const favorites = JSON.parse(localStorage.getItem("favoritePlaces")) || [];
+
+  favorites.splice(index, 1);
+
+  localStorage.setItem("favoritePlaces", JSON.stringify(favorites));
+
+  renderFavoritePlaces();
+  updateMyStats();
+
+  alert("찜한 관광지가 삭제되었습니다.");
+}
+document.getElementById("writeRecordFromPlaceBtn").addEventListener("click", () => {
+  if (!selectedPlace) {
+    alert("여행 기록을 작성할 관광지를 선택해주세요.");
+    return;
+  }
+
+  document.getElementById("recordTitle").value = `${selectedPlace.title} 여행`;
+  document.getElementById("recordContent").value =
+    `${selectedPlace.title}에 다녀온 여행 기록을 남겨보세요.`;
+
+  showScreen("record");
+});
+function openRecordDetail(record) {
+  document.getElementById("recordDetailTitle").textContent = record.title;
+  document.getElementById("recordDetailDate").textContent = record.date;
+  document.getElementById("recordDetailContent").textContent = record.content || "작성된 내용이 없습니다.";
+  document.getElementById("recordDetailRegion").textContent = record.region || "지역 정보 없음";
+
+  const detailImage = document.getElementById("recordDetailImage");
+
+  if (record.image) {
+    detailImage.style.backgroundImage = `url(${record.image})`;
+  } else {
+    detailImage.style.backgroundImage = "";
+  }
+
+  showScreen("recordDetail");
+}
+
+document.getElementById("backToMyFromRecordDetail").addEventListener("click", () => {
+  showScreen("my");
+});
+let kakaoMap = null;
+let kakaoMarkers = [];
+
+function initKakaoMap(latitude = 37.242474, longitude = 127.038872) {
+  const mapContainer = document.getElementById("kakaoMap");
+
+  const mapOption = {
+    center: new kakao.maps.LatLng(latitude, longitude),
+    level: 5,
+  };
+
+  kakaoMap = new kakao.maps.Map(mapContainer, mapOption);
+
+  const currentPosition = new kakao.maps.LatLng(latitude, longitude);
+
+  new kakao.maps.Marker({
+    position: currentPosition,
+    map: kakaoMap,
+  });
+}
+
+function updateKakaoMap(latitude, longitude, places = []) {
+  if (!kakaoMap) {
+    initKakaoMap(latitude, longitude);
+  }
+
+  const center = new kakao.maps.LatLng(latitude, longitude);
+  kakaoMap.setCenter(center);
+
+  kakaoMarkers.forEach((marker) => marker.setMap(null));
+  kakaoMarkers = [];
+
+  places.forEach((place) => {
+    if (!place.mapy || !place.mapx) return;
+
+    const markerPosition = new kakao.maps.LatLng(
+      Number(place.mapy),
+      Number(place.mapx)
+    );
+
+    const marker = new kakao.maps.Marker({
+      position: markerPosition,
+      map: kakaoMap,
+    });
+
+    kakaoMarkers.push(marker);
+
+    kakao.maps.event.addListener(marker, "click", () => {
+      openPlaceDetail(place);
+    });
+  });
+}
+
+initKakaoMap();
+function updateMyStats() {
+  const records =
+    JSON.parse(localStorage.getItem("travelRecords")) || [];
+
+  const favorites =
+    JSON.parse(localStorage.getItem("favoritePlaces")) || [];
+
+  document.getElementById("postCount").textContent =
+    records.length;
+
+  document.getElementById("placeCount").textContent =
+    favorites.length;
+
+  document.getElementById("mateCount").textContent =
+    0;
+}
+document.getElementById("openTravelMapBtn").addEventListener("click", () => {
+  updateTravelMapCounts();
+  showScreen("travelMap");
+});
+
+document.getElementById("backToMyFromTravelMap").addEventListener("click", () => {
+  showScreen("my");
+});
+
+function updateRegionName(latitude, longitude) {
+  const regionSelect = document.getElementById("regionSelect");
+
+  if (!regionSelect) return;
+
+  const geocoder = new kakao.maps.services.Geocoder();
+
+  geocoder.coord2RegionCode(
+    longitude,
+    latitude,
+    (result, status) => {
+      if (status !== kakao.maps.services.Status.OK || result.length === 0) {
+        console.log("지역명을 불러오지 못했습니다.");
+        return;
+      }
+
+      const region = result.find((item) => item.region_type === "H") || result[0];
+
+      const sido = region.region_1depth_name;
+
+      console.log("현재 지역:", sido);
+
+      const optionExists = Array.from(regionSelect.options).some((option) => {
+        return option.value === sido;
+      });
+
+      if (!optionExists) {
+        const option = document.createElement("option");
+        option.value = sido;
+        option.textContent = sido;
+        regionSelect.appendChild(option);
+      }
+
+      regionSelect.value = sido;
+      const recordRegion = document.getElementById("recordRegion");
+
+      if (recordRegion) {
+        const recordOptionExists = Array.from(recordRegion.options).some((option) => {
+          return option.value === sido;
+        });
+
+        if (!recordOptionExists) {
+          const option = document.createElement("option");
+          option.value = sido;
+          option.textContent = sido;
+          recordRegion.appendChild(option);
+        }
+
+        recordRegion.value = sido;
+      }
+    }
+  );
+}
+function updateTravelMapCounts() {
+  const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
+
+  const regionCounts = {};
+
+  records.forEach((record) => {
+    if (!record.region) return;
+
+    regionCounts[record.region] = (regionCounts[record.region] || 0) + 1;
+  });
+
+  document.querySelectorAll(".region[data-region]").forEach((regionEl) => {
+    const regionName = regionEl.dataset.region;
+    const count = regionCounts[regionName] || 0;
+
+    regionEl.classList.remove(
+      "lv-region-0",
+      "lv-region-1",
+      "lv-region-2",
+      "lv-region-3"
+    );
+
+    if (count === 0) {
+      regionEl.classList.add("lv-region-0");
+    } else if (count === 1) {
+      regionEl.classList.add("lv-region-1");
+    } else if (count <= 3) {
+      regionEl.classList.add("lv-region-2");
+    } else {
+      regionEl.classList.add("lv-region-3");
+    }
+
+    const countText = regionEl.querySelector("span");
+    countText.textContent = `${count}회`;
+  });
+}
+function updateMascotBook() {
+  const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
+  const visitedRegions = records.map((record) => record.region);
+
+  document.querySelectorAll(".mascot-card").forEach((card) => {
+    const region = card.dataset.region;
+
+    if (visitedRegions.includes(region)) {
+      card.classList.add("unlocked");
+    } else {
+      card.classList.remove("unlocked");
+    }
+  });
+}
+
+document.getElementById("openMascotBookBtn").addEventListener("click", () => {
+  updateMascotBook();
+  showScreen("mascotBook");
+});
+
+document.getElementById("backToMyFromMascotBook").addEventListener("click", () => {
+  showScreen("my");
+});
+
+let selectedProfileImage = "";
+
+function loadProfile() {
+  const profile = JSON.parse(localStorage.getItem("userProfile")) || {
+    name: "모리토리",
+    bio: "여행을 좋아하는 모리토리",
+    image: "",
+  };
+
+  document.getElementById("profileName").textContent = profile.name;
+  document.getElementById("profileBio").textContent = profile.bio;
+
+  const avatar = document.getElementById("profileAvatar");
+
+  if (profile.image) {
+    avatar.textContent = "";
+    avatar.style.backgroundImage = `url(${profile.image})`;
+  } else {
+    avatar.textContent = "🐶";
+    avatar.style.backgroundImage = "";
+  }
+}
+
+document.getElementById("openProfileEditBtn").addEventListener("click", () => {
+  const profile = JSON.parse(localStorage.getItem("userProfile")) || {
+    name: "모리토리",
+    bio: "여행을 좋아하는 모리토리",
+    image: "",
+  };
+
+  selectedProfileImage = profile.image || "";
+
+  document.getElementById("profileNameInput").value = profile.name;
+  document.getElementById("profileBioInput").value = profile.bio;
+
+  const preview = document.getElementById("profileImagePreview");
+
+  if (selectedProfileImage) {
+    preview.textContent = "";
+    preview.style.backgroundImage = `url(${selectedProfileImage})`;
+  } else {
+    preview.textContent = "🐶";
+    preview.style.backgroundImage = "";
+  }
+
+  showScreen("profileEdit");
+});
+
+document.getElementById("backToMyFromProfileEdit").addEventListener("click", () => {
+  showScreen("my");
+});
+
+document.getElementById("profileImageInput").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    selectedProfileImage = reader.result;
+
+    const preview = document.getElementById("profileImagePreview");
+    preview.textContent = "";
+    preview.style.backgroundImage = `url(${selectedProfileImage})`;
+  };
+
+  reader.readAsDataURL(file);
+});
+
+document.getElementById("saveProfileBtn").addEventListener("click", () => {
+  const name = document.getElementById("profileNameInput").value.trim();
+  const bio = document.getElementById("profileBioInput").value.trim();
+
+  if (!name) {
+    alert("닉네임을 입력해주세요.");
+    return;
+  }
+
+  const profile = {
+    name,
+    bio: bio || "소개글이 없습니다.",
+    image: selectedProfileImage,
+  };
+
+  localStorage.setItem("userProfile", JSON.stringify(profile));
+
+  loadProfile();
+
+  alert("프로필이 수정되었습니다.");
+
+  showScreen("my");
+});
+
+loadProfile();
