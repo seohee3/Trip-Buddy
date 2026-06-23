@@ -339,6 +339,7 @@ function openPlaceDetail(place) {
   } else {
     detailImage.style.backgroundImage = "";
   }
+  fetchPlaceDetailIntro(place.contentid, place.contenttypeid);
 
   showScreen("placeDetail");
 }
@@ -346,3 +347,43 @@ function openPlaceDetail(place) {
 document.getElementById("backToNearby").addEventListener("click", () => {
   showScreen("nearby");
 });
+
+async function fetchPlaceDetailIntro(contentId, contentTypeId) {
+  const fallbackText = document.getElementById("detailDescription").textContent;
+
+  if (!contentId) {
+    document.getElementById("detailDescription").textContent = fallbackText;
+    return;
+  }
+
+  const url =
+    `https://apis.data.go.kr/B551011/KorService2/detailCommon2` +
+    `?serviceKey=${TOUR_API_KEY}` +
+    `&MobileOS=ETC` +
+    `&MobileApp=TripBuddy` +
+    `&_type=json` +
+    `&contentId=${contentId}` +
+    `&defaultYN=Y` +
+    `&overviewYN=Y` +
+    `&addrinfoYN=Y` +
+    `&mapinfoYN=Y` +
+    `&firstImageYN=Y`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    console.log("공통 상세 정보:", data);
+
+    const item = data.response?.body?.items?.item?.[0];
+
+    if (!item || !item.overview) {
+      return;
+    }
+
+    document.getElementById("detailDescription").innerHTML =
+      item.overview;
+  } catch (error) {
+    console.error(error);
+  }
+}
