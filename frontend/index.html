@@ -76,15 +76,15 @@
       </header>
 
       <div class="profile">
-        <div class="avatar">🐶</div>
+        <div id="profileAvatar" class="avatar">🐶</div>
         <div>
-          <h3>모리토리</h3>
-          <p>여행을 좋아하는 모리토리</p>
+          <h3 id="profileName">모리토리</h3>
+          <p id="profileBio">여행을 좋아하는 모리토리</p>
         </div>
       </div>
 
       <div class="profile-buttons">
-        <button>프로필 편집</button>
+        <button id="openProfileEditBtn">프로필 편집</button>
         <button id="openRecordForm">+ 여행 기록 추가</button>
       </div>
 
@@ -115,6 +115,37 @@
 
       <h3 class="section-title">나의 여행 기록</h3>
       <div id="recordList" class="record-grid"></div>
+    </section>
+
+    <section id="profileEdit" class="screen">
+      <header class="profile-header">
+        <button id="backToMyFromProfileEdit" class="back-btn">←</button>
+        <h2>프로필 편집</h2>
+        <button id="saveProfileBtn" class="save-btn">완료</button>
+      </header>
+
+      <div class="form-card">
+        <label>프로필 사진</label>
+
+        <div class="profile-edit-photo">
+          <label id="profileImagePreview" class="profile-image-preview" for="profileImageInput">
+          🐶
+          </label>
+
+          <input
+            type="file"
+            id="profileImageInput"
+            accept="image/*"
+            hidden
+          />
+        </div>
+
+        <label>닉네임</label>
+        <input id="profileNameInput" class="text-input" placeholder="닉네임을 입력하세요" />
+
+        <label>소개글</label>
+        <textarea id="profileBioInput" placeholder="소개글을 입력하세요"></textarea>
+      </div>
     </section>
 
     <section id="record" class="screen">

@@ -794,3 +794,99 @@ document.getElementById("openMascotBookBtn").addEventListener("click", () => {
 document.getElementById("backToMyFromMascotBook").addEventListener("click", () => {
   showScreen("my");
 });
+
+let selectedProfileImage = "";
+
+function loadProfile() {
+  const profile = JSON.parse(localStorage.getItem("userProfile")) || {
+    name: "모리토리",
+    bio: "여행을 좋아하는 모리토리",
+    image: "",
+  };
+
+  document.getElementById("profileName").textContent = profile.name;
+  document.getElementById("profileBio").textContent = profile.bio;
+
+  const avatar = document.getElementById("profileAvatar");
+
+  if (profile.image) {
+    avatar.textContent = "";
+    avatar.style.backgroundImage = `url(${profile.image})`;
+  } else {
+    avatar.textContent = "🐶";
+    avatar.style.backgroundImage = "";
+  }
+}
+
+document.getElementById("openProfileEditBtn").addEventListener("click", () => {
+  const profile = JSON.parse(localStorage.getItem("userProfile")) || {
+    name: "모리토리",
+    bio: "여행을 좋아하는 모리토리",
+    image: "",
+  };
+
+  selectedProfileImage = profile.image || "";
+
+  document.getElementById("profileNameInput").value = profile.name;
+  document.getElementById("profileBioInput").value = profile.bio;
+
+  const preview = document.getElementById("profileImagePreview");
+
+  if (selectedProfileImage) {
+    preview.textContent = "";
+    preview.style.backgroundImage = `url(${selectedProfileImage})`;
+  } else {
+    preview.textContent = "🐶";
+    preview.style.backgroundImage = "";
+  }
+
+  showScreen("profileEdit");
+});
+
+document.getElementById("backToMyFromProfileEdit").addEventListener("click", () => {
+  showScreen("my");
+});
+
+document.getElementById("profileImageInput").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    selectedProfileImage = reader.result;
+
+    const preview = document.getElementById("profileImagePreview");
+    preview.textContent = "";
+    preview.style.backgroundImage = `url(${selectedProfileImage})`;
+  };
+
+  reader.readAsDataURL(file);
+});
+
+document.getElementById("saveProfileBtn").addEventListener("click", () => {
+  const name = document.getElementById("profileNameInput").value.trim();
+  const bio = document.getElementById("profileBioInput").value.trim();
+
+  if (!name) {
+    alert("닉네임을 입력해주세요.");
+    return;
+  }
+
+  const profile = {
+    name,
+    bio: bio || "소개글이 없습니다.",
+    image: selectedProfileImage,
+  };
+
+  localStorage.setItem("userProfile", JSON.stringify(profile));
+
+  loadProfile();
+
+  alert("프로필이 수정되었습니다.");
+
+  showScreen("my");
+});
+
+loadProfile();
