@@ -93,6 +93,7 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
 
   alert("여행 기록이 저장되었습니다.");
   renderTravelRecords();
+  updateMyStats();
 
   document.getElementById("recordTitle").value = "";
   document.getElementById("recordContent").value = "";
@@ -224,6 +225,7 @@ function renderTravelRecords() {
 }
 
 renderTravelRecords();
+updateMyStats();
 function deleteTravelRecord(index) {
   const confirmed = confirm("이 여행 기록을 삭제하시겠습니까?");
 
@@ -238,6 +240,7 @@ function deleteTravelRecord(index) {
   renderTravelRecords();
 
   alert("여행 기록이 삭제되었습니다.");
+  updateMyStats();
 }
 let selectedImageData = "";
 
@@ -493,6 +496,7 @@ document.getElementById("favoritePlaceBtn").addEventListener("click", () => {
   localStorage.setItem("favoritePlaces", JSON.stringify(favorites));
 
   renderFavoritePlaces();
+  updateMyStats();
 
   alert("찜한 관광지에 저장되었습니다.");
 });
@@ -545,6 +549,7 @@ function deleteFavoritePlace(index) {
   localStorage.setItem("favoritePlaces", JSON.stringify(favorites));
 
   renderFavoritePlaces();
+  updateMyStats();
 
   alert("찜한 관광지가 삭제되었습니다.");
 }
@@ -634,3 +639,19 @@ function updateKakaoMap(latitude, longitude, places = []) {
 }
 
 initKakaoMap();
+function updateMyStats() {
+  const records =
+    JSON.parse(localStorage.getItem("travelRecords")) || [];
+
+  const favorites =
+    JSON.parse(localStorage.getItem("favoritePlaces")) || [];
+
+  document.getElementById("postCount").textContent =
+    records.length;
+
+  document.getElementById("placeCount").textContent =
+    favorites.length;
+
+  document.getElementById("mateCount").textContent =
+    0;
+}
