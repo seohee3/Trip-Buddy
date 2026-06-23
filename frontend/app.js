@@ -98,7 +98,8 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
     content,
     date: document.getElementById("selectedDateText").textContent,
     image: selectedImageData,
-};
+    region: document.getElementById("recordRegion").value,
+  };
 
   const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
   records.unshift(record);
@@ -581,8 +582,8 @@ document.getElementById("writeRecordFromPlaceBtn").addEventListener("click", () 
 function openRecordDetail(record) {
   document.getElementById("recordDetailTitle").textContent = record.title;
   document.getElementById("recordDetailDate").textContent = record.date;
-  document.getElementById("recordDetailContent").textContent =
-    record.content || "작성된 내용이 없습니다.";
+  document.getElementById("recordDetailContent").textContent = record.content || "작성된 내용이 없습니다.";
+  document.getElementById("recordDetailRegion").textContent = record.region || "지역 정보 없음";
 
   const detailImage = document.getElementById("recordDetailImage");
 
@@ -710,6 +711,22 @@ function updateRegionName(latitude, longitude) {
       }
 
       regionSelect.value = sido;
+      const recordRegion = document.getElementById("recordRegion");
+
+      if (recordRegion) {
+        const recordOptionExists = Array.from(recordRegion.options).some((option) => {
+          return option.value === sido;
+        });
+
+        if (!recordOptionExists) {
+          const option = document.createElement("option");
+          option.value = sido;
+          option.textContent = sido;
+          recordRegion.appendChild(option);
+        }
+
+        recordRegion.value = sido;
+      }
     }
   );
 }
