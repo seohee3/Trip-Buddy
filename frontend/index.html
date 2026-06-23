@@ -134,7 +134,7 @@
       </div>
 
       <div class="menu-grid">
-        <button>여행 지도</button>
+        <button id="openTravelMapBtn">여행 지도</button>
         <button>마스코트 도감</button>
       </div>
 
@@ -207,6 +207,46 @@
         <div class="detail-info">
           <strong>기록</strong>
           <p id="recordDetailContent">여행 내용</p>
+        </div>
+      </div>
+    </section>
+    <section id="travelMap" class="screen">
+      <header class="profile-header">
+        <button id="backToMyFromTravelMap" class="back-btn">←</button>
+        <h2>나의 방문 현황</h2>
+        <span></span>
+      </header>
+
+      <div class="travel-map-card">
+        <h3>Travel Mate</h3>
+
+        <div class="korea-map-mock">
+          <div class="region r-incheon lv-region-0">인천<br><span>0회</span></div>
+          <div class="region r-seoul lv-region-3">서울<br><span>3회</span></div>
+          <div class="region r-gyeonggi lv-region-1">경기<br><span>1회</span></div>
+          <div class="region r-gangwon lv-region-1">강원<br><span>1회</span></div>
+
+          <div class="region r-chungbuk lv-region-0">충북<br><span>0회</span></div>
+          <div class="region r-chungnam lv-region-1">충남<br><span>1회</span></div>
+
+          <div class="region r-gyeongbuk lv-region-2">경북<br><span>2회</span></div>
+          <div class="region r-daegu lv-region-1">대구<br><span>1회</span></div>
+          <div class="region r-gyeongnam lv-region-2">경남<br><span>2회</span></div>
+          <div class="region r-busan lv-region-1">부산<br><span>1회</span></div>
+
+          <div class="region r-jeonbuk lv-region-0">전북<br><span>0회</span></div>
+          <div class="region r-gwangju lv-region-0">광주<br><span>0회</span></div>
+          <div class="region r-jeonnam lv-region-0">전남<br><span>0회</span></div>
+
+          <div class="region r-jeju lv-region-1">제주<br><span>1회</span></div>
+        </div>
+
+        <div class="map-legend">
+          <span>방문 횟수</span>
+          <div><i class="lv0"></i>0회</div>
+          <div><i class="lv1"></i>1회</div>
+          <div><i class="lv2"></i>3회</div>
+          <div><i class="lv3"></i>10회 이상</div>
         </div>
       </div>
     </section>

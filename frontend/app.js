@@ -655,3 +655,10 @@ function updateMyStats() {
   document.getElementById("mateCount").textContent =
     0;
 }
+document.getElementById("openTravelMapBtn").addEventListener("click", () => {
+  showScreen("travelMap");
+});
+
+document.getElementById("backToMyFromTravelMap").addEventListener("click", () => {
+  showScreen("my");
+});
