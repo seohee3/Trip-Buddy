@@ -535,3 +535,24 @@ textarea {
 .place-card {
   cursor: pointer;
 }
+.keyword-search {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.keyword-search input {
+  flex: 1;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.keyword-search button {
+  border: none;
+  background: #5c3dff;
+  color: white;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: bold;
+}

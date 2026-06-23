@@ -1,5 +1,6 @@
 const TOUR_API_KEY = "a2652d41b57533048e6566c0afca1ba6f190d1706286e228c74f843544f8d3a8";
 const screens = document.querySelectorAll(".screen");
+let nearbyPlaces = [];
 
 function showScreen(id) {
   screens.forEach((screen) => {
@@ -272,6 +273,7 @@ async function fetchNearbyPlaces(latitude, longitude) {
 
     const rawItems = data.response?.body?.items?.item || [];
     const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+    nearbyPlaces = items;
     renderNearbyPlaces(items);
   } catch (error) {
     console.error(error);
@@ -385,5 +387,74 @@ async function fetchPlaceDetailIntro(contentId, contentTypeId) {
       item.overview;
   } catch (error) {
     console.error(error);
+  }
+}
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+
+    document.querySelectorAll(".tab").forEach((btn) => {
+      btn.classList.remove("active");
+    });
+
+    tab.classList.add("active");
+
+    const tabText = tab.textContent.trim();
+
+    let sortedPlaces = [...nearbyPlaces];
+
+    if (tabText === "거리순") {
+
+      sortedPlaces.sort((a, b) => {
+        return Number(a.dist || 999999) -
+               Number(b.dist || 999999);
+      });
+
+    } else if (tabText === "인기순") {
+
+      sortedPlaces.sort((a, b) => {
+        return a.title.localeCompare(b.title);
+      });
+
+    }
+
+    renderNearbyPlaces(sortedPlaces);
+  });
+});
+document.getElementById("nearbyKeywordBtn").addEventListener("click", () => {
+  const keyword = document.getElementById("nearbyKeywordInput").value.trim();
+
+  if (!keyword) {
+    alert("검색어를 입력해주세요.");
+    return;
+  }
+
+  searchNearbyKeyword(keyword);
+});
+
+async function searchNearbyKeyword(keyword) {
+  const url =
+    `https://apis.data.go.kr/B551011/KorService2/searchKeyword2` +
+    `?serviceKey=${TOUR_API_KEY}` +
+    `&MobileOS=ETC` +
+    `&MobileApp=TripBuddy` +
+    `&_type=json` +
+    `&keyword=${encodeURIComponent(keyword)}` +
+    `&numOfRows=10` +
+    `&pageNo=1`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    console.log("키워드 검색 결과:", data);
+
+    const rawItems = data.response?.body?.items?.item || [];
+    const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+
+    nearbyPlaces = items;
+    renderNearbyPlaces(items);
+  } catch (error) {
+    console.error(error);
+    alert("검색 결과를 불러오지 못했습니다.");
   }
 }
