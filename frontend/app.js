@@ -41,13 +41,14 @@ document.getElementById("backToRecord").addEventListener("click", () => {
   showScreen("record");
 });
 
-document.getElementById("locationBtn").addEventListener("click", () => {
+function loadCurrentLocationAndPlaces() {
   if (!navigator.geolocation) {
     alert("이 브라우저에서는 위치 기능을 지원하지 않습니다.");
     return;
   }
 
-  alert("현재 위치를 가져오는 중입니다.");
+  document.getElementById("locationInfo").innerHTML =
+    "현재 위치를 불러오는 중입니다.";
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -55,11 +56,13 @@ document.getElementById("locationBtn").addEventListener("click", () => {
       const longitude = position.coords.longitude;
 
       document.getElementById("locationInfo").innerHTML =
-      `
-      위도: ${latitude.toFixed(6)}
-      <br>
-      경도: ${longitude.toFixed(6)}
-      `;
+        `
+        위도: ${latitude.toFixed(6)}
+        <br>
+        경도: ${longitude.toFixed(6)}
+        `;
+
+      updateRegionName(latitude, longitude);
       fetchNearbyPlaces(latitude, longitude);
 
       console.log("위도:", latitude);
@@ -67,10 +70,20 @@ document.getElementById("locationBtn").addEventListener("click", () => {
     },
     (error) => {
       console.error(error);
-      alert("위치 정보를 가져오지 못했습니다. 브라우저 위치 권한을 허용해주세요.");
+      document.getElementById("locationInfo").innerHTML =
+        "위치 정보를 가져오지 못했습니다. 위치 권한을 허용해주세요.";
     }
   );
+}
+
+document.getElementById("locationBtn").addEventListener("click", () => {
+  loadCurrentLocationAndPlaces();
 });
+
+window.addEventListener("load", () => {
+  loadCurrentLocationAndPlaces();
+});
+
 document.getElementById("saveRecordBtn").addEventListener("click", () => {
   const title = document.getElementById("recordTitle").value.trim();
   const content = document.getElementById("recordContent").value.trim();
@@ -662,3 +675,41 @@ document.getElementById("openTravelMapBtn").addEventListener("click", () => {
 document.getElementById("backToMyFromTravelMap").addEventListener("click", () => {
   showScreen("my");
 });
+
+function updateRegionName(latitude, longitude) {
+  const regionSelect = document.getElementById("regionSelect");
+
+  if (!regionSelect) return;
+
+  const geocoder = new kakao.maps.services.Geocoder();
+
+  geocoder.coord2RegionCode(
+    longitude,
+    latitude,
+    (result, status) => {
+      if (status !== kakao.maps.services.Status.OK || result.length === 0) {
+        console.log("지역명을 불러오지 못했습니다.");
+        return;
+      }
+
+      const region = result.find((item) => item.region_type === "H") || result[0];
+
+      const sido = region.region_1depth_name;
+
+      console.log("현재 지역:", sido);
+
+      const optionExists = Array.from(regionSelect.options).some((option) => {
+        return option.value === sido;
+      });
+
+      if (!optionExists) {
+        const option = document.createElement("option");
+        option.value = sido;
+        option.textContent = sido;
+        regionSelect.appendChild(option);
+      }
+
+      regionSelect.value = sido;
+    }
+  );
+}
