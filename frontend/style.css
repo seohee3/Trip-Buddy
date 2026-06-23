@@ -556,3 +556,74 @@ textarea {
   padding: 10px 14px;
   font-weight: bold;
 }
+.favorite-btn {
+  width: 100%;
+  border: none;
+  background: #fff0f3;
+  color: #e64980;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.record-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.record-grid-item {
+  height: 105px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #87ceeb, #20639b);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.record-grid-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  color: white;
+}
+
+.record-grid-overlay strong {
+  display: block;
+  font-size: 12px;
+}
+
+.record-grid-overlay span {
+  font-size: 10px;
+}
+
+.grid-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #d9534f;
+  border-radius: 8px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: bold;
+}
+.delete-favorite-btn {
+  border: none;
+  background: #ffefef;
+  color: #d9534f;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}

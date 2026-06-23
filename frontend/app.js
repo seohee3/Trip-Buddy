@@ -1,6 +1,7 @@
 const TOUR_API_KEY = "a2652d41b57533048e6566c0afca1ba6f190d1706286e228c74f843544f8d3a8";
 const screens = document.querySelectorAll(".screen");
 let nearbyPlaces = [];
+let selectedPlace = null;
 
 function showScreen(id) {
   screens.forEach((screen) => {
@@ -192,28 +193,32 @@ function renderTravelRecords() {
   }
 
   records.forEach((record, index) => {
-    const card = document.createElement("div");
-    card.className = "record-card";
+    const item = document.createElement("div");
+    item.className = "record-grid-item";
 
-    card.innerHTML = `
-    ${record.image ? `<div class="record-image" style="background-image: url(${record.image})"></div>` : ""}
-    <div class="record-card-header">
-        <h4>${record.title}</h4>
-        <button class="delete-record-btn" data-index="${index}">삭제</button>
-    </div>
-    <p>${record.content || "작성된 내용이 없습니다."}</p>
-    <span>${record.date}</span>
-`;
+    if (record.image) {
+      item.style.backgroundImage = `url(${record.image})`;
+    }
 
-    recordList.appendChild(card);
-});
+    item.innerHTML = `
+      <button class="grid-delete-btn" data-index="${index}">삭제</button>
+      <div class="record-grid-overlay">
+        <strong>${record.title}</strong>
+        <span>${record.date}</span>
+      </div>
+    `;
 
-document.querySelectorAll(".delete-record-btn").forEach((button) => {
-  button.addEventListener("click", () => {
-    const index = Number(button.dataset.index);
-    deleteTravelRecord(index);
+    recordList.appendChild(item);
   });
-});
+
+  document.querySelectorAll(".grid-delete-btn").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+
+      const index = Number(button.dataset.index);
+      deleteTravelRecord(index);
+    });
+  });
 }
 
 renderTravelRecords();
@@ -320,6 +325,7 @@ function renderNearbyPlaces(items) {
   });
 }
 function openPlaceDetail(place) {
+  selectedPlace = place;
   const title = place.title || "관광지 이름";
   const address = place.addr1 || "주소 정보 없음";
   const distanceKm = place.dist
@@ -457,4 +463,85 @@ async function searchNearbyKeyword(keyword) {
     console.error(error);
     alert("검색 결과를 불러오지 못했습니다.");
   }
+}
+document.getElementById("nearbyKeywordInput").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    document.getElementById("nearbyKeywordBtn").click();
+  }
+});
+document.getElementById("favoritePlaceBtn").addEventListener("click", () => {
+  if (!selectedPlace) {
+    alert("찜할 관광지를 선택해주세요.");
+    return;
+  }
+
+  const favorites = JSON.parse(localStorage.getItem("favoritePlaces")) || [];
+
+  const alreadySaved = favorites.some(
+    (place) => place.contentid === selectedPlace.contentid
+  );
+
+  if (alreadySaved) {
+    alert("이미 찜한 관광지입니다.");
+    return;
+  }
+
+  favorites.unshift(selectedPlace);
+  localStorage.setItem("favoritePlaces", JSON.stringify(favorites));
+
+  renderFavoritePlaces();
+
+  alert("찜한 관광지에 저장되었습니다.");
+});
+
+function renderFavoritePlaces() {
+  const favoriteList = document.getElementById("favoritePlaceList");
+  const favorites = JSON.parse(localStorage.getItem("favoritePlaces")) || [];
+
+  favoriteList.innerHTML = "";
+
+  if (favorites.length === 0) {
+    favoriteList.innerHTML = `<p class="empty-text">아직 찜한 관광지가 없습니다.</p>`;
+    return;
+  }
+
+  favorites.forEach((place, index) => {
+    const card = document.createElement("div");
+    card.className = "record-card";
+
+    card.innerHTML = `
+      <div class="record-card-header">
+        <h4>${place.title}</h4>
+        <button class="delete-favorite-btn" data-index="${index}">삭제</button>
+      </div>
+      <p>${place.addr1 || "주소 정보 없음"}</p>
+      <span>찜한 관광지</span>
+    `;
+
+    favoriteList.appendChild(card);
+  });
+
+  document.querySelectorAll(".delete-favorite-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.index);
+      deleteFavoritePlace(index);
+    });
+  });
+}
+
+renderFavoritePlaces();
+function deleteFavoritePlace(index) {
+  const confirmed = confirm("이 찜한 관광지를 삭제하시겠습니까?");
+
+  if (!confirmed) return;
+
+  const favorites = JSON.parse(localStorage.getItem("favoritePlaces")) || [];
+
+  favorites.splice(index, 1);
+
+  localStorage.setItem("favoritePlaces", JSON.stringify(favorites));
+
+  renderFavoritePlaces();
+
+  alert("찜한 관광지가 삭제되었습니다.");
 }

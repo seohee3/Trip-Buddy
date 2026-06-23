@@ -88,6 +88,7 @@
       <h3 id="detailTitle">관광지 이름</h3>
       <p id="detailAddress">주소 정보</p>
       <span id="detailDistance">거리 정보</span>
+      <button id="favoritePlaceBtn" class="favorite-btn">♡ 찜하기</button>
 
       <div class="detail-info">
         <strong>소개</strong>
@@ -128,23 +129,19 @@
         <button>여행 지도</button>
         <button>마스코트 도감</button>
       </div>
-      <h3 class="section-title">나의 여행 기록</h3>
-      <div id="recordList" class="record-list"></div>
 
-      <div class="photo-grid">
-        <div class="photo p1"></div>
-        <div class="photo p2"></div>
-        <div class="photo p3"></div>
-        <div class="photo p4"></div>
-        <div class="photo p5"></div>
-        <div class="photo p6"></div>
-      </div>
+      <h3 class="section-title">찜한 관광지</h3>
+      <div id="favoritePlaceList" class="record-list"></div>
+
+      <h3 class="section-title">나의 여행 기록</h3>
+      <div id="recordList" class="record-grid"></div>
     </section>
 
     <section id="record" class="screen">
       <header class="profile-header">
         <button id="backToMy" class="back-btn">←</button>
         <h2>여행 기록</h2>
+        
         <button id="saveRecordBtn" class="save-btn">완료</button>
       </header>
 
