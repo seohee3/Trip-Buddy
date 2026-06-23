@@ -311,6 +311,38 @@ function renderNearbyPlaces(items) {
       </div>
     `;
 
+    card.addEventListener("click", () => {
+      openPlaceDetail(place);
+    });
     placeList.appendChild(card);
   });
 }
+function openPlaceDetail(place) {
+  const title = place.title || "관광지 이름";
+  const address = place.addr1 || "주소 정보 없음";
+  const distanceKm = place.dist
+    ? (Number(place.dist) / 1000).toFixed(1)
+    : "-";
+  const imageUrl = place.firstimage || "";
+
+  document.getElementById("detailTitle").textContent = title;
+  document.getElementById("detailAddress").textContent = address;
+  document.getElementById("detailDistance").textContent = `📍 ${distanceKm}km`;
+
+  document.getElementById("detailDescription").textContent =
+    `${title}은(는) 현재 위치 기준 주변 관광지 목록에서 조회된 장소입니다. 상세 소개 정보는 이후 관광공사 상세 API를 연결하여 확장할 수 있습니다.`;
+
+  const detailImage = document.getElementById("detailImage");
+
+  if (imageUrl) {
+    detailImage.style.backgroundImage = `url(${imageUrl})`;
+  } else {
+    detailImage.style.backgroundImage = "";
+  }
+
+  showScreen("placeDetail");
+}
+
+document.getElementById("backToNearby").addEventListener("click", () => {
+  showScreen("nearby");
+});
