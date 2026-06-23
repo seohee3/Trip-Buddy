@@ -108,6 +108,8 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
   alert("여행 기록이 저장되었습니다.");
   renderTravelRecords();
   updateMyStats();
+  updateTravelMapCounts();
+  updateMascotBook();
 
   document.getElementById("recordTitle").value = "";
   document.getElementById("recordContent").value = "";
@@ -255,6 +257,8 @@ function deleteTravelRecord(index) {
 
   alert("여행 기록이 삭제되었습니다.");
   updateMyStats();
+  updateTravelMapCounts();
+  updateMascotBook();
 }
 let selectedImageData = "";
 
@@ -670,6 +674,7 @@ function updateMyStats() {
     0;
 }
 document.getElementById("openTravelMapBtn").addEventListener("click", () => {
+  updateTravelMapCounts();
   showScreen("travelMap");
 });
 
@@ -730,3 +735,62 @@ function updateRegionName(latitude, longitude) {
     }
   );
 }
+function updateTravelMapCounts() {
+  const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
+
+  const regionCounts = {};
+
+  records.forEach((record) => {
+    if (!record.region) return;
+
+    regionCounts[record.region] = (regionCounts[record.region] || 0) + 1;
+  });
+
+  document.querySelectorAll(".region[data-region]").forEach((regionEl) => {
+    const regionName = regionEl.dataset.region;
+    const count = regionCounts[regionName] || 0;
+
+    regionEl.classList.remove(
+      "lv-region-0",
+      "lv-region-1",
+      "lv-region-2",
+      "lv-region-3"
+    );
+
+    if (count === 0) {
+      regionEl.classList.add("lv-region-0");
+    } else if (count === 1) {
+      regionEl.classList.add("lv-region-1");
+    } else if (count <= 3) {
+      regionEl.classList.add("lv-region-2");
+    } else {
+      regionEl.classList.add("lv-region-3");
+    }
+
+    const countText = regionEl.querySelector("span");
+    countText.textContent = `${count}회`;
+  });
+}
+function updateMascotBook() {
+  const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
+  const visitedRegions = records.map((record) => record.region);
+
+  document.querySelectorAll(".mascot-card").forEach((card) => {
+    const region = card.dataset.region;
+
+    if (visitedRegions.includes(region)) {
+      card.classList.add("unlocked");
+    } else {
+      card.classList.remove("unlocked");
+    }
+  });
+}
+
+document.getElementById("openMascotBookBtn").addEventListener("click", () => {
+  updateMascotBook();
+  showScreen("mascotBook");
+});
+
+document.getElementById("backToMyFromMascotBook").addEventListener("click", () => {
+  showScreen("my");
+});

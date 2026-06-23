@@ -27,11 +27,17 @@ body {
   display: block;
 }
 
-.top-bar,
-.profile-header {
+.top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 select,
@@ -766,17 +772,55 @@ textarea {
 .lv2 { background: #9d8cff; }
 .lv3 { background: #5c3dff; }
 
-.profile-header {
-  position: relative;
-  justify-content: center;
-}
-
 .profile-header .back-btn {
   position: absolute;
   left: 0;
 }
 
+.profile-header .save-btn {
+  position: absolute;
+  right: 0;
+}
+
 .profile-header h2 {
   margin: 0;
   text-align: center;
+}
+.mascot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.mascot-card {
+  background: #f3f0ff;
+  border-radius: 18px;
+  padding: 16px;
+  text-align: center;
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.mascot-card.unlocked {
+  opacity: 1;
+  filter: none;
+  background: #ede7ff;
+  border: 1px solid #c8c0ff;
+}
+
+.mascot-icon {
+  font-size: 38px;
+  margin-bottom: 8px;
+}
+
+.mascot-card strong {
+  display: block;
+  color: #5c3dff;
+  margin-bottom: 4px;
+}
+
+.mascot-card span {
+  font-size: 12px;
+  color: #666;
 }

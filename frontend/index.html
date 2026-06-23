@@ -15,7 +15,6 @@
           <option>부산광역시</option>
           <option>제주특별자치도</option>
         </select>
-        <button class="back-btn">←</button>
       </div>
 
       <h2>주변</h2>
@@ -48,7 +47,6 @@
     <header class="profile-header">
       <button id="backToNearby" class="back-btn">←</button>
       <h2>관광지 상세</h2>
-      <span></span>
     </header>
 
     <div id="detailImage" class="detail-image"></div>
@@ -74,7 +72,6 @@
 
     <section id="my" class="screen">
       <header class="profile-header">
-        <button class="back-btn">←</button>
         <h2>마이페이지</h2>
       </header>
 
@@ -110,7 +107,7 @@
 
       <div class="menu-grid">
         <button id="openTravelMapBtn">여행 지도</button>
-        <button>마스코트 도감</button>
+        <button id="openMascotBookBtn">마스코트 도감</button>
       </div>
 
       <h3 class="section-title">찜한 관광지</h3>
@@ -188,7 +185,6 @@
       <header class="profile-header">
         <button id="backToMyFromRecordDetail" class="back-btn">←</button>
         <h2>여행 기록 상세</h2>
-        <span></span>
       </header>
 
       <div id="recordDetailImage" class="detail-image"></div>
@@ -215,24 +211,20 @@
         <h3>Travel Mate</h3>
 
         <div class="korea-map-mock">
-          <div class="region r-incheon lv-region-0">인천<br><span>0회</span></div>
-          <div class="region r-seoul lv-region-3">서울<br><span>3회</span></div>
-          <div class="region r-gyeonggi lv-region-1">경기<br><span>1회</span></div>
-          <div class="region r-gangwon lv-region-1">강원<br><span>1회</span></div>
-
-          <div class="region r-chungbuk lv-region-0">충북<br><span>0회</span></div>
-          <div class="region r-chungnam lv-region-1">충남<br><span>1회</span></div>
-
-          <div class="region r-gyeongbuk lv-region-2">경북<br><span>2회</span></div>
-          <div class="region r-daegu lv-region-1">대구<br><span>1회</span></div>
-          <div class="region r-gyeongnam lv-region-2">경남<br><span>2회</span></div>
-          <div class="region r-busan lv-region-1">부산<br><span>1회</span></div>
-
-          <div class="region r-jeonbuk lv-region-0">전북<br><span>0회</span></div>
-          <div class="region r-gwangju lv-region-0">광주<br><span>0회</span></div>
-          <div class="region r-jeonnam lv-region-0">전남<br><span>0회</span></div>
-
-          <div class="region r-jeju lv-region-1">제주<br><span>1회</span></div>
+          <div class="region r-incheon lv-region-0" data-region="인천광역시">인천<br><span>0회</span></div>
+          <div class="region r-seoul lv-region-0" data-region="서울특별시">서울<br><span>0회</span></div>
+          <div class="region r-gyeonggi lv-region-0" data-region="경기도">경기<br><span>0회</span></div>
+          <div class="region r-gangwon lv-region-0" data-region="강원특별자치도">강원<br><span>0회</span></div>
+          <div class="region r-chungbuk lv-region-0" data-region="충청북도">충북<br><span>0회</span></div>
+          <div class="region r-chungnam lv-region-0" data-region="충청남도">충남<br><span>0회</span></div>
+          <div class="region r-gyeongbuk lv-region-0" data-region="경상북도">경북<br><span>0회</span></div>
+          <div class="region r-daegu lv-region-0" data-region="대구광역시">대구<br><span>0회</span></div>
+          <div class="region r-gyeongnam lv-region-0" data-region="경상남도">경남<br><span>0회</span></div>
+          <div class="region r-busan lv-region-0" data-region="부산광역시">부산<br><span>0회</span></div>
+          <div class="region r-jeonbuk lv-region-0" data-region="전라북도">전북<br><span>0회</span></div>
+          <div class="region r-gwangju lv-region-0" data-region="광주광역시">광주<br><span>0회</span></div>
+          <div class="region r-jeonnam lv-region-0" data-region="전라남도">전남<br><span>0회</span></div>
+          <div class="region r-jeju lv-region-0" data-region="제주특별자치도">제주<br><span>0회</span></div>
         </div>
 
         <div class="map-legend">
@@ -241,6 +233,50 @@
           <div><i class="lv1"></i>1회</div>
           <div><i class="lv2"></i>3회</div>
           <div><i class="lv3"></i>10회 이상</div>
+        </div>
+      </div>
+    </section>
+    <section id="mascotBook" class="screen">
+      <header class="profile-header">
+        <button id="backToMyFromMascotBook" class="back-btn">←</button>
+        <h2>마스코트 도감</h2>
+      </header>
+
+      <div class="mascot-grid">
+        <div class="mascot-card" data-region="서울특별시">
+          <div class="mascot-icon">🐯</div>
+          <strong>서울</strong>
+          <span>해치</span>
+        </div>
+
+        <div class="mascot-card" data-region="경기도">
+          <div class="mascot-icon">🐻</div>
+          <strong>경기</strong>
+          <span>봉공이</span>
+        </div>
+
+        <div class="mascot-card" data-region="부산광역시">
+          <div class="mascot-icon">🐦</div>
+          <strong>부산</strong>
+          <span>부기</span>
+        </div>
+
+        <div class="mascot-card" data-region="제주특별자치도">
+          <div class="mascot-icon">🗿</div>
+          <strong>제주</strong>
+          <span>돌하르방</span>
+        </div>
+
+        <div class="mascot-card" data-region="강원특별자치도">
+          <div class="mascot-icon">⛰️</div>
+          <strong>강원</strong>
+          <span>반비</span>
+        </div>
+
+        <div class="mascot-card" data-region="인천광역시">
+          <div class="mascot-icon">✈️</div>
+          <strong>인천</strong>
+          <span>버미</span>
         </div>
       </div>
     </section>
