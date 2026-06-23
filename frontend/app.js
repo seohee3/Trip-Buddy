@@ -207,7 +207,9 @@ function renderTravelRecords() {
         <span>${record.date}</span>
       </div>
     `;
-
+    item.addEventListener("click", () => {
+    openRecordDetail(record);
+    });
     recordList.appendChild(item);
   });
 
@@ -280,6 +282,7 @@ async function fetchNearbyPlaces(latitude, longitude) {
     const items = Array.isArray(rawItems) ? rawItems : [rawItems];
     nearbyPlaces = items;
     renderNearbyPlaces(items);
+    updateKakaoMap(latitude, longitude, items);
   } catch (error) {
     console.error(error);
     alert("주변 관광지 정보를 불러오지 못했습니다.");
@@ -545,3 +548,89 @@ function deleteFavoritePlace(index) {
 
   alert("찜한 관광지가 삭제되었습니다.");
 }
+document.getElementById("writeRecordFromPlaceBtn").addEventListener("click", () => {
+  if (!selectedPlace) {
+    alert("여행 기록을 작성할 관광지를 선택해주세요.");
+    return;
+  }
+
+  document.getElementById("recordTitle").value = `${selectedPlace.title} 여행`;
+  document.getElementById("recordContent").value =
+    `${selectedPlace.title}에 다녀온 여행 기록을 남겨보세요.`;
+
+  showScreen("record");
+});
+function openRecordDetail(record) {
+  document.getElementById("recordDetailTitle").textContent = record.title;
+  document.getElementById("recordDetailDate").textContent = record.date;
+  document.getElementById("recordDetailContent").textContent =
+    record.content || "작성된 내용이 없습니다.";
+
+  const detailImage = document.getElementById("recordDetailImage");
+
+  if (record.image) {
+    detailImage.style.backgroundImage = `url(${record.image})`;
+  } else {
+    detailImage.style.backgroundImage = "";
+  }
+
+  showScreen("recordDetail");
+}
+
+document.getElementById("backToMyFromRecordDetail").addEventListener("click", () => {
+  showScreen("my");
+});
+let kakaoMap = null;
+let kakaoMarkers = [];
+
+function initKakaoMap(latitude = 37.242474, longitude = 127.038872) {
+  const mapContainer = document.getElementById("kakaoMap");
+
+  const mapOption = {
+    center: new kakao.maps.LatLng(latitude, longitude),
+    level: 5,
+  };
+
+  kakaoMap = new kakao.maps.Map(mapContainer, mapOption);
+
+  const currentPosition = new kakao.maps.LatLng(latitude, longitude);
+
+  new kakao.maps.Marker({
+    position: currentPosition,
+    map: kakaoMap,
+  });
+}
+
+function updateKakaoMap(latitude, longitude, places = []) {
+  if (!kakaoMap) {
+    initKakaoMap(latitude, longitude);
+  }
+
+  const center = new kakao.maps.LatLng(latitude, longitude);
+  kakaoMap.setCenter(center);
+
+  kakaoMarkers.forEach((marker) => marker.setMap(null));
+  kakaoMarkers = [];
+
+  places.forEach((place) => {
+    if (!place.mapy || !place.mapx) return;
+
+    const markerPosition = new kakao.maps.LatLng(
+      Number(place.mapy),
+      Number(place.mapx)
+    );
+
+    const marker = new kakao.maps.Marker({
+      position: markerPosition,
+      map: kakaoMap,
+    });
+
+    kakaoMarkers.push(marker);
+
+    kakao.maps.event.addListener(marker, "click", () => {
+      openPlaceDetail(place);
+    });
+  });
+}
+
+initKakaoMap();

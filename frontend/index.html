@@ -38,13 +38,7 @@
         현재 위치 정보가 표시됩니다.
       </p>
 
-      <div class="map-box">
-        <div class="map-dot blue"></div>
-        <div class="map-dot green"></div>
-        <div class="map-dot red"></div>
-        <div class="map-dot yellow"></div>
-        <p>지도 영역</p>
-      </div>
+      <div id="kakaoMap" class="map-box"></div>
 
       <div class="place-list">
         <article class="place-card">
@@ -89,6 +83,9 @@
       <p id="detailAddress">주소 정보</p>
       <span id="detailDistance">거리 정보</span>
       <button id="favoritePlaceBtn" class="favorite-btn">♡ 찜하기</button>
+      <button id="writeRecordFromPlaceBtn" class="write-record-btn">
+        ✈ 여행 기록 작성
+      </button>
 
       <div class="detail-info">
         <strong>소개</strong>
@@ -183,6 +180,26 @@
       </div>
     </section>
 
+    <section id="recordDetail" class="screen">
+      <header class="profile-header">
+        <button id="backToMyFromRecordDetail" class="back-btn">←</button>
+        <h2>여행 기록 상세</h2>
+        <span></span>
+      </header>
+
+      <div id="recordDetailImage" class="detail-image"></div>
+
+      <div class="detail-card">
+        <h3 id="recordDetailTitle">여행 제목</h3>
+        <span id="recordDetailDate">여행 날짜</span>
+
+        <div class="detail-info">
+          <strong>기록</strong>
+          <p id="recordDetailContent">여행 내용</p>
+        </div>
+      </div>
+    </section>
+
     <section id="calendar" class="screen">
       <header class="profile-header">
         <button id="backToRecord" class="back-btn">←</button>
@@ -224,7 +241,7 @@
       <button data-target="my">MY</button>
     </nav>
   </div>
-
+  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=59866cac221d712a98ca8fd1bde44e62"></script>
   <script src="app.js"></script>
 </body>
 </html>

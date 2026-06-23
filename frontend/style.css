@@ -627,3 +627,14 @@ textarea {
   font-weight: bold;
   cursor: pointer;
 }
+.write-record-btn {
+  width: 100%;
+  border: none;
+  background: #f1eefc;
+  color: #5c3dff;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
