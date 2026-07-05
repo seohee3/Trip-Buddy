@@ -144,6 +144,16 @@ h2 {
   flex-shrink: 0;
 }
 
+.default-place-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1eefc;
+  color: #8a7bd3;
+  font-size: 12px;
+  font-weight: bold;
+}
+
 .img1 { background: linear-gradient(135deg, #9fd89f, #6bb56b); }
 .img2 { background: linear-gradient(135deg, #9ed0ff, #508fd6); }
 .img3 { background: linear-gradient(135deg, #c8a77a, #765539); }
@@ -180,6 +190,8 @@ h2 {
   align-items: center;
   justify-content: center;
   font-size: 34px;
+  background-size: cover;
+  background-position: center;
 }
 
 .profile h3 {
@@ -499,6 +511,47 @@ textarea {
   object-fit: cover;
   flex-shrink: 0;
 }
+
+.loading-text,
+.empty-text {
+  width: 100%;
+  margin: 12px 0;
+  padding: 18px 14px;
+  border-radius: 14px;
+  background: #fafafa;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.loading-text {
+  color: #5c3dff;
+  background: #f4f1ff;
+}
+
+.record-grid .empty-text {
+  grid-column: 1 / -1;
+}
+
+.default-detail-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.default-detail-img::after {
+  content: "이미지 없음";
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.default-avatar {
+  background: #f1eefc;
+  color: #5c3dff;
+}
+
 .detail-image {
   width: 100%;
   height: 210px;

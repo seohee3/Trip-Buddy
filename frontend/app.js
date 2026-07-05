@@ -3,6 +3,58 @@ const screens = document.querySelectorAll(".screen");
 let nearbyPlaces = [];
 let selectedPlace = null;
 
+function setPlaceListMessage(message, type = "empty") {
+  const placeList = document.querySelector(".place-list");
+
+  if (!placeList) return;
+
+  placeList.innerHTML = `<p class="${type}-text">${message}</p>`;
+}
+
+function setDefaultBackground(element, className) {
+  element.style.backgroundImage = "";
+  element.classList.add(className);
+}
+
+function setImageBackground(element, imageUrl, className) {
+  element.classList.remove(className);
+  element.style.backgroundImage = `url(${imageUrl})`;
+}
+
+function resizeImageFile(file, maxSize = 640, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const image = new Image();
+
+      image.onload = () => {
+        const scale = Math.min(maxSize / image.width, maxSize / image.height, 1);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+
+      image.onerror = () => {
+        resolve(reader.result);
+      };
+
+      image.src = reader.result;
+    };
+
+    reader.onerror = () => {
+      reject(reader.error);
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
 function showScreen(id) {
   screens.forEach((screen) => {
     screen.classList.remove("active");
@@ -43,12 +95,15 @@ document.getElementById("backToRecord").addEventListener("click", () => {
 
 function loadCurrentLocationAndPlaces() {
   if (!navigator.geolocation) {
-    alert("이 브라우저에서는 위치 기능을 지원하지 않습니다.");
+    document.getElementById("locationInfo").textContent =
+      "이 브라우저에서는 위치 기능을 지원하지 않습니다.";
+    setPlaceListMessage("위치 기능을 사용할 수 없어 주변 관광지를 불러올 수 없습니다.");
     return;
   }
 
-  document.getElementById("locationInfo").innerHTML =
+  document.getElementById("locationInfo").textContent =
     "현재 위치를 불러오는 중입니다.";
+  setPlaceListMessage("현재 위치를 확인하는 중입니다.", "loading");
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -70,8 +125,13 @@ function loadCurrentLocationAndPlaces() {
     },
     (error) => {
       console.error(error);
-      document.getElementById("locationInfo").innerHTML =
-        "위치 정보를 가져오지 못했습니다. 위치 권한을 허용해주세요.";
+      const message =
+        error.code === error.PERMISSION_DENIED
+          ? "위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용한 뒤 다시 시도해주세요."
+          : "위치 정보를 가져오지 못했습니다. 잠시 후 다시 시도해주세요.";
+
+      document.getElementById("locationInfo").textContent = message;
+      setPlaceListMessage(message);
     }
   );
 }
@@ -280,6 +340,8 @@ document.getElementById("recordImageInput").addEventListener("change", (event) =
   reader.readAsDataURL(file);
 });
 async function fetchNearbyPlaces(latitude, longitude) {
+  setPlaceListMessage("주변 관광지를 불러오는 중입니다.", "loading");
+
   const url =
     `https://apis.data.go.kr/B551011/KorService2/locationBasedList2` +
     `?serviceKey=${TOUR_API_KEY}` +
@@ -306,7 +368,7 @@ async function fetchNearbyPlaces(latitude, longitude) {
     updateKakaoMap(latitude, longitude, items);
   } catch (error) {
     console.error(error);
-    alert("주변 관광지 정보를 불러오지 못했습니다.");
+    setPlaceListMessage("주변 관광지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
   }
 }
 
@@ -315,7 +377,7 @@ function renderNearbyPlaces(items) {
   placeList.innerHTML = "";
 
   if (items.length === 0) {
-    placeList.innerHTML = `<p>주변 관광지 정보가 없습니다.</p>`;
+    setPlaceListMessage("주변 관광지 정보가 없습니다.");
     return;
   }
 
@@ -333,7 +395,7 @@ function renderNearbyPlaces(items) {
       ${
         imageUrl
           ? `<img class="place-api-img" src="${imageUrl}" alt="${place.title}">`
-          : `<div class="place-img img1"></div>`
+          : `<div class="place-img default-place-img">이미지 없음</div>`
       }
       <div>
         <h3>${place.title}</h3>
@@ -367,9 +429,9 @@ function openPlaceDetail(place) {
   const detailImage = document.getElementById("detailImage");
 
   if (imageUrl) {
-    detailImage.style.backgroundImage = `url(${imageUrl})`;
+    setImageBackground(detailImage, imageUrl, "default-detail-img");
   } else {
-    detailImage.style.backgroundImage = "";
+    setDefaultBackground(detailImage, "default-detail-img");
   }
   fetchPlaceDetailIntro(place.contentid, place.contenttypeid);
 
@@ -592,9 +654,9 @@ function openRecordDetail(record) {
   const detailImage = document.getElementById("recordDetailImage");
 
   if (record.image) {
-    detailImage.style.backgroundImage = `url(${record.image})`;
+    setImageBackground(detailImage, record.image, "default-detail-img");
   } else {
-    detailImage.style.backgroundImage = "";
+    setDefaultBackground(detailImage, "default-detail-img");
   }
 
   showScreen("recordDetail");
@@ -796,6 +858,7 @@ document.getElementById("backToMyFromMascotBook").addEventListener("click", () =
 });
 
 let selectedProfileImage = "";
+let isProfileImageLoading = false;
 
 function loadProfile() {
   const profile = JSON.parse(localStorage.getItem("userProfile")) || {
@@ -811,10 +874,10 @@ function loadProfile() {
 
   if (profile.image) {
     avatar.textContent = "";
-    avatar.style.backgroundImage = `url(${profile.image})`;
+    setImageBackground(avatar, profile.image, "default-avatar");
   } else {
     avatar.textContent = "🐶";
-    avatar.style.backgroundImage = "";
+    setDefaultBackground(avatar, "default-avatar");
   }
 }
 
@@ -834,10 +897,10 @@ document.getElementById("openProfileEditBtn").addEventListener("click", () => {
 
   if (selectedProfileImage) {
     preview.textContent = "";
-    preview.style.backgroundImage = `url(${selectedProfileImage})`;
+    setImageBackground(preview, selectedProfileImage, "default-avatar");
   } else {
     preview.textContent = "🐶";
-    preview.style.backgroundImage = "";
+    setDefaultBackground(preview, "default-avatar");
   }
 
   showScreen("profileEdit");
@@ -847,25 +910,33 @@ document.getElementById("backToMyFromProfileEdit").addEventListener("click", () 
   showScreen("my");
 });
 
-document.getElementById("profileImageInput").addEventListener("change", (event) => {
+document.getElementById("profileImageInput").addEventListener("change", async (event) => {
   const file = event.target.files[0];
 
   if (!file) return;
 
-  const reader = new FileReader();
+  isProfileImageLoading = true;
 
-  reader.onload = () => {
-    selectedProfileImage = reader.result;
+  try {
+    selectedProfileImage = await resizeImageFile(file);
 
     const preview = document.getElementById("profileImagePreview");
     preview.textContent = "";
-    preview.style.backgroundImage = `url(${selectedProfileImage})`;
-  };
-
-  reader.readAsDataURL(file);
+    setImageBackground(preview, selectedProfileImage, "default-avatar");
+  } catch (error) {
+    console.error(error);
+    alert("프로필 이미지를 불러오지 못했습니다. 다른 이미지를 선택해주세요.");
+  } finally {
+    isProfileImageLoading = false;
+  }
 });
 
-document.getElementById("saveProfileBtn").addEventListener("click", () => {
+function saveProfile() {
+  if (isProfileImageLoading) {
+    alert("프로필 이미지를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+    return;
+  }
+
   const name = document.getElementById("profileNameInput").value.trim();
   const bio = document.getElementById("profileBioInput").value.trim();
 
@@ -880,13 +951,21 @@ document.getElementById("saveProfileBtn").addEventListener("click", () => {
     image: selectedProfileImage,
   };
 
-  localStorage.setItem("userProfile", JSON.stringify(profile));
+  try {
+    localStorage.setItem("userProfile", JSON.stringify(profile));
+  } catch (error) {
+    console.error(error);
+    alert("프로필 이미지를 저장할 공간이 부족합니다. 더 작은 이미지를 선택해주세요.");
+    return;
+  }
 
   loadProfile();
 
   alert("프로필이 수정되었습니다.");
 
   showScreen("my");
-});
+}
+
+document.getElementById("saveProfileBtn").addEventListener("click", saveProfile);
 
 loadProfile();
