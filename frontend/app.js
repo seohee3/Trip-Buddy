@@ -69,7 +69,12 @@ function showScreen(id) {
       button.classList.add("nav-active");
     }
   });
+
+  if (id === "home") {
+    renderHome();
+  }
 }
+
 
 document.querySelectorAll(".bottom-nav button[data-target]").forEach((button) => {
   button.addEventListener("click", () => {
@@ -1020,8 +1025,8 @@ let isProfileImageLoading = false;
 
 function loadProfile() {
   const profile = JSON.parse(localStorage.getItem("userProfile")) || {
-    name: "모리토리",
-    bio: "여행을 좋아하는 모리토리",
+    name: "닉네임을 설정해보세요",
+    bio: "나만의 여행 프로필을 만들어보세요.",
     image: "",
   };
 
@@ -1041,8 +1046,8 @@ function loadProfile() {
 
 document.getElementById("openProfileEditBtn").addEventListener("click", () => {
   const profile = JSON.parse(localStorage.getItem("userProfile")) || {
-    name: "모리토리",
-    bio: "여행을 좋아하는 모리토리",
+    name: "",
+    bio: "",
     image: "",
   };
 
@@ -1127,3 +1132,111 @@ function saveProfile() {
 document.getElementById("saveProfileBtn").addEventListener("click", saveProfile);
 
 loadProfile();
+function getHomeProfile() {
+  return JSON.parse(localStorage.getItem("userProfile")) || {
+    name: "닉네임을 설정해보세요",
+    bio: "여행 프로필을 작성해보세요.",
+    image: "",
+  };
+}
+
+function getVisitedRegions(records) {
+  return [...new Set(records.map((record) => record.region).filter(Boolean))];
+}
+
+function renderHome() {
+  const profile = getHomeProfile();
+  const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
+  const visitedRegions = getVisitedRegions(records);
+
+  document.getElementById("homeGreeting").textContent =
+    records.length > 0
+      ? "최근 여행 기록을 확인해보세요"
+      : "나만의 여행을 기록해보세요";
+
+  document.getElementById("homeProfileName").textContent = profile.name;
+  document.getElementById("homeProfileBio").textContent = profile.bio;
+
+  const homeAvatar = document.getElementById("homeAvatar");
+
+  if (profile.image) {
+    homeAvatar.textContent = "";
+    setImageBackground(homeAvatar, profile.image, "default-avatar");
+  } else {
+    homeAvatar.textContent = "🐶";
+    setDefaultBackground(homeAvatar, "default-avatar");
+  }
+
+  document.getElementById("homeRecordCount").textContent = records.length;
+  document.getElementById("homeVisitedRegionCount").textContent = visitedRegions.length;
+  document.getElementById("homeMascotCount").textContent = visitedRegions.length;
+
+  const list = document.getElementById("homeRecentRecords");
+  list.innerHTML = "";
+
+  if (records.length === 0) {
+    list.innerHTML = `<p class="empty-text">아직 여행 기록이 없습니다.</p>`;
+    return;
+  }
+
+  records.slice(0, 3).forEach((record) => {
+    const coverImage = getRecordCoverImage(record);
+
+    const card = document.createElement("article");
+    card.className = "home-feed-card";
+
+    card.innerHTML = `
+      <div class="home-feed-top">
+        <div class="home-mini-avatar">🌿</div>
+        <div>
+          <strong>${record.title || "제목 없음"}</strong>
+          <p>${record.region || "지역 정보 없음"} · ${record.date || "날짜 정보 없음"}</p>
+        </div>
+      </div>
+
+      <div class="home-feed-image ${coverImage ? "" : "default-place-img"}">
+        ${coverImage ? "" : "이미지 없음"}
+      </div>
+
+      <p class="home-feed-content">
+        ${record.content || "작성된 내용이 없습니다."}
+      </p>
+    `;
+
+    const imageBox = card.querySelector(".home-feed-image");
+
+    if (coverImage) {
+      imageBox.style.backgroundImage = `url(${coverImage})`;
+    }
+
+    card.addEventListener("click", () => {
+      openRecordDetail(record);
+    });
+
+    list.appendChild(card);
+  });
+}
+
+document.getElementById("homeGoNearbyBtn").addEventListener("click", () => {
+  showScreen("nearby");
+});
+
+document.getElementById("homeGoRecordBtn").addEventListener("click", () => {
+  showScreen("record");
+});
+
+document.getElementById("homeGoMyBtn").addEventListener("click", () => {
+  showScreen("my");
+});
+
+document.getElementById("homeGoMapBtn").addEventListener("click", () => {
+  updateTravelMapCounts();
+  showScreen("travelMap");
+});
+
+document.getElementById("homeGoMascotBtn").addEventListener("click", () => {
+  updateMascotBook();
+  showScreen("mascotBook");
+});
+
+renderHome();

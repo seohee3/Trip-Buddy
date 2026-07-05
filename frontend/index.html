@@ -8,7 +8,66 @@
 </head>
 <body>
   <div class="app">
-    <section id="nearby" class="screen active">
+    <section id="home" class="screen active">
+      <header class="home-feed-header">
+        <div>
+          <h2>Travel Mate</h2>
+          <p id="homeGreeting">나만의 여행을 기록해보세요</p>
+        </div>
+        <div class="home-icons">
+          <button type="button">🔔</button>
+          <button type="button">✈️</button>
+        </div>
+      </header>
+
+      <div class="home-profile-card">
+        <div id="homeAvatar" class="home-profile-avatar">🐶</div>
+        <div>
+          <strong id="homeProfileName">닉네임을 설정해보세요</strong>
+          <p id="homeProfileBio">여행 프로필을 작성해보세요.</p>
+        </div>
+      </div>
+
+      <section class="home-feed-section">
+        <div class="home-section-title">
+          <h3>최근 여행 기록</h3>
+          <button id="homeGoMyBtn" type="button">전체보기</button>
+        </div>
+        <div id="homeRecentRecords" class="home-feed-list"></div>
+      </section>
+
+      <section class="home-feed-section">
+        <h3>나의 여행 현황</h3>
+        <div class="home-status-card">
+          <div>
+            <strong id="homeRecordCount">0</strong>
+            <span>기록</span>
+          </div>
+          <div>
+            <strong id="homeVisitedRegionCount">0</strong>
+            <span>방문 지역</span>
+          </div>
+          <div>
+            <strong id="homeMascotCount">0</strong>
+            <span>마스코트</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="home-feed-section">
+        <h3>추천 바로가기</h3>
+        <div class="home-menu-list">
+          <button id="homeGoNearbyBtn" type="button">📍 주변 관광지 둘러보기</button>
+          <button id="homeGoRecordBtn" type="button">✍ 여행 기록 남기기</button>
+          <button id="homeGoMapBtn" type="button">🗺 나의 여행 지도 보기</button>
+          <button id="homeGoMascotBtn" type="button">🎒 마스코트 도감 보기</button>
+        </div>
+      </section>
+    </section>
+    
+
+  
+    <section id="nearby" class="screen">
       <div class="top-bar">
         <select id="regionSelect">
           <option>서울특별시</option>
@@ -339,9 +398,9 @@
     </section>
 
     <nav class="bottom-nav">
-      <button>홈</button>
+      <button class="nav-active" data-target="home">홈</button>
       <button>검색</button>
-      <button class="nav-active" data-target="nearby">주변</button>
+      <button data-target="nearby">주변</button>
       <button>메이트</button>
       <button data-target="my">MY</button>
     </nav>
