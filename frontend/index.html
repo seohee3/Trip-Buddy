@@ -190,6 +190,7 @@
                 type="file"
                 id="recordImageInput"
                 accept="image/*"
+                multiple
                 hidden
             />
 
@@ -219,6 +220,7 @@
       </header>
 
       <div id="recordDetailImage" class="detail-image"></div>
+      <div id="recordDetailImages" class="record-detail-images"></div>
 
       <div class="detail-card">
         <h3 id="recordDetailTitle">여행 제목</h3>
@@ -330,16 +332,7 @@
                 <strong id="endDateText">선택 전</strong>
             </div>
         </div>
-        <h3>2026년 5월</h3>
-
-        <div class="calendar-grid">
-            <button></button><button></button><button></button><button></button>
-            <button data-day="1">1</button><button data-day="2">2</button><button data-day="3">3</button>
-            <button data-day="4">4</button><button data-day="5">5</button><button data-day="6">6</button><button data-day="7">7</button><button data-day="8">8</button><button data-day="9">9</button><button data-day="10">10</button>
-            <button data-day="11">11</button><button data-day="12">12</button><button data-day="13">13</button><button data-day="14">14</button><button data-day="15">15</button><button data-day="16">16</button><button data-day="17">17</button>
-            <button data-day="18">18</button><button data-day="19">19</button><button data-day="20">20</button><button data-day="21">21</button><button data-day="22">22</button><button data-day="23">23</button><button data-day="24">24</button>
-            <button data-day="25">25</button><button data-day="26">26</button><button data-day="27">27</button><button data-day="28">28</button><button data-day="29">29</button><button data-day="30">30</button><button data-day="31">31</button>
-        </div>
+        <div id="yearCalendar" class="year-calendar"></div>
 
         <button id="calendarSaveBtn" class="submit-btn">저장하기</button>
       </div>

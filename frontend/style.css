@@ -897,3 +897,39 @@ textarea {
   justify-content: center;
   margin: 10px 0 20px;
 }
+.image-preview {
+  overflow-x: auto;
+  gap: 8px;
+}
+
+.preview-thumb {
+  width: 76px;
+  height: 76px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.record-detail-images {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: -6px 0 16px;
+  padding-bottom: 4px;
+}
+
+.record-detail-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.record-detail-thumb.selected {
+  border-color: #5c3dff;
+}

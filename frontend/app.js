@@ -86,6 +86,7 @@ document.getElementById("backToMy").addEventListener("click", () => {
 });
 
 document.getElementById("openCalendar").addEventListener("click", () => {
+  renderYearCalendar();
   showScreen("calendar");
 });
 
@@ -144,7 +145,51 @@ window.addEventListener("load", () => {
   loadCurrentLocationAndPlaces();
 });
 
+let selectedRecordImages = [];
+let isRecordImageLoading = false;
+
+function getRecordImages(record) {
+  if (Array.isArray(record.images)) {
+    return record.images.filter(Boolean);
+  }
+
+  return record.image ? [record.image] : [];
+}
+
+function getRecordCoverImage(record) {
+  return getRecordImages(record)[0] || "";
+}
+
+function renderRecordImagePreview() {
+  const preview = document.getElementById("imagePreview");
+  preview.innerHTML = "";
+  preview.style.backgroundImage = "";
+
+  if (selectedRecordImages.length === 0) {
+    preview.textContent = "미리보기";
+    return;
+  }
+
+  selectedRecordImages.forEach((imageUrl) => {
+    const image = document.createElement("div");
+    image.className = "preview-thumb";
+    image.style.backgroundImage = `url(${imageUrl})`;
+    preview.appendChild(image);
+  });
+}
+
+function resetRecordImageInput() {
+  selectedRecordImages = [];
+  document.getElementById("recordImageInput").value = "";
+  renderRecordImagePreview();
+}
+
 document.getElementById("saveRecordBtn").addEventListener("click", () => {
+  if (isRecordImageLoading) {
+    alert("이미지를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+    return;
+  }
+
   const title = document.getElementById("recordTitle").value.trim();
   const content = document.getElementById("recordContent").value.trim();
 
@@ -157,13 +202,21 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
     title,
     content,
     date: document.getElementById("selectedDateText").textContent,
-    image: selectedImageData,
+    image: selectedRecordImages[0] || "",
+    images: selectedRecordImages,
     region: document.getElementById("recordRegion").value,
   };
 
   const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
   records.unshift(record);
-  localStorage.setItem("travelRecords", JSON.stringify(records));
+
+  try {
+    localStorage.setItem("travelRecords", JSON.stringify(records));
+  } catch (error) {
+    console.error(error);
+    alert("이미지를 저장할 공간이 부족합니다. 이미지 수를 줄이거나 더 작은 이미지를 선택해주세요.");
+    return;
+  }
 
   alert("여행 기록이 저장되었습니다.");
   renderTravelRecords();
@@ -174,44 +227,52 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
   document.getElementById("recordTitle").value = "";
   document.getElementById("recordContent").value = "";
 
-  selectedImageData = "";
-  document.getElementById("recordImageInput").value = "";
-  document.getElementById("imagePreview").textContent = "미리보기";
-  document.getElementById("imagePreview").style.backgroundImage = "";
+  resetRecordImageInput();
 
   showScreen("my");
 });
 
-let selectedStartDay = null;
-let selectedEndDay = null;
+const currentYear = new Date().getFullYear();
+const today = new Date();
+const todayDateId = toDateId(today);
+let selectedStartDate = null;
+let selectedEndDate = null;
 
-function formatDate(day) {
-  return `2026.05.${String(day).padStart(2, "0")}`;
+function toDateId(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatDate(dateId) {
+  return dateId ? dateId.replaceAll("-", ".") : "선택 전";
 }
 
 function updateCalendarText() {
   document.getElementById("startDateText").textContent =
-    selectedStartDay ? formatDate(selectedStartDay) : "선택 전";
+    selectedStartDate ? formatDate(selectedStartDate) : "선택 전";
 
   document.getElementById("endDateText").textContent =
-    selectedEndDay ? formatDate(selectedEndDay) : "선택 전";
+    selectedEndDate ? formatDate(selectedEndDate) : "선택 전";
 }
 
 function updateCalendarUI() {
-  document.querySelectorAll(".calendar-grid button[data-day]").forEach((button) => {
-    const day = Number(button.dataset.day);
+  document.querySelectorAll(".calendar-grid button[data-date]").forEach((button) => {
+    const dateId = button.dataset.date;
 
     button.classList.remove("picked", "range");
 
-    if (day === selectedStartDay || day === selectedEndDay) {
+    if (dateId === selectedStartDate || dateId === selectedEndDate) {
       button.classList.add("picked");
     }
 
     if (
-      selectedStartDay &&
-      selectedEndDay &&
-      day > selectedStartDay &&
-      day < selectedEndDay
+      selectedStartDate &&
+      selectedEndDate &&
+      dateId > selectedStartDate &&
+      dateId < selectedEndDate
     ) {
       button.classList.add("range");
     }
@@ -220,35 +281,96 @@ function updateCalendarUI() {
   updateCalendarText();
 }
 
-document.querySelectorAll(".calendar-grid button[data-day]").forEach((button) => {
-  button.addEventListener("click", () => {
-    const day = Number(button.dataset.day);
+function selectCalendarDate(dateId) {
+  if (dateId > todayDateId) return;
 
-    if (!selectedStartDay || (selectedStartDay && selectedEndDay)) {
-      selectedStartDay = day;
-      selectedEndDay = null;
-    } else if (day < selectedStartDay) {
-      selectedEndDay = selectedStartDay;
-      selectedStartDay = day;
-    } else {
-      selectedEndDay = day;
+  if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
+    selectedStartDate = dateId;
+    selectedEndDate = null;
+  } else if (dateId < selectedStartDate) {
+    selectedEndDate = selectedStartDate;
+    selectedStartDate = dateId;
+  } else {
+    selectedEndDate = dateId;
+  }
+
+  updateCalendarUI();
+}
+
+function renderYearCalendar() {
+  const calendar = document.getElementById("yearCalendar");
+  const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
+
+  calendar.innerHTML = "";
+
+  for (let month = 0; month < 12; month += 1) {
+    const monthEl = document.createElement("section");
+    monthEl.className = "month-calendar";
+
+    const title = document.createElement("h3");
+    title.textContent = `${currentYear}년 ${month + 1}월`;
+    monthEl.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "calendar-grid";
+
+    weekDays.forEach((day) => {
+      const label = document.createElement("span");
+      label.textContent = day;
+      grid.appendChild(label);
+    });
+
+    const firstDay = new Date(currentYear, month, 1).getDay();
+    const lastDate = new Date(currentYear, month + 1, 0).getDate();
+
+    for (let blank = 0; blank < firstDay; blank += 1) {
+      const spacer = document.createElement("span");
+      spacer.className = "calendar-blank";
+      grid.appendChild(spacer);
     }
 
-    updateCalendarUI();
-  });
-});
+    for (let day = 1; day <= lastDate; day += 1) {
+      const date = new Date(currentYear, month, day);
+      const dateId = toDateId(date);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.date = dateId;
+      button.textContent = day;
+
+      if (dateId === todayDateId) {
+        button.classList.add("today");
+      }
+
+      if (dateId > todayDateId) {
+        button.classList.add("future");
+        button.disabled = true;
+      } else {
+        button.addEventListener("click", () => {
+          selectCalendarDate(dateId);
+        });
+      }
+
+      grid.appendChild(button);
+    }
+
+    monthEl.appendChild(grid);
+    calendar.appendChild(monthEl);
+  }
+
+  updateCalendarUI();
+}
 
 function saveCalendarDate() {
-  if (!selectedStartDay) {
+  if (!selectedStartDate) {
     alert("시작일을 선택해주세요.");
     return;
   }
 
-  if (!selectedEndDay) {
-    selectedEndDay = selectedStartDay;
+  if (!selectedEndDate) {
+    selectedEndDate = selectedStartDate;
   }
 
-  const dateText = `${formatDate(selectedStartDay)} ~ ${formatDate(selectedEndDay)}`;
+  const dateText = `${formatDate(selectedStartDate)} ~ ${formatDate(selectedEndDate)}`;
 
   document.getElementById("selectedDateText").textContent = dateText;
 
@@ -273,8 +395,11 @@ function renderTravelRecords() {
     const item = document.createElement("div");
     item.className = "record-grid-item";
 
-    if (record.image) {
-      item.style.backgroundImage = `url(${record.image})`;
+    const coverImage = getRecordCoverImage(record);
+    if (coverImage) {
+      item.style.backgroundImage = `url(${coverImage})`;
+    } else {
+      item.classList.add("default-detail-img");
     }
 
     item.innerHTML = `
@@ -320,24 +445,29 @@ function deleteTravelRecord(index) {
   updateTravelMapCounts();
   updateMascotBook();
 }
-let selectedImageData = "";
+document.getElementById("recordImageInput").addEventListener("change", async (event) => {
+  const files = Array.from(event.target.files || []);
 
-document.getElementById("recordImageInput").addEventListener("change", (event) => {
-  const file = event.target.files[0];
+  if (files.length === 0) {
+    resetRecordImageInput();
+    return;
+  }
 
-  if (!file) return;
+  isRecordImageLoading = true;
 
-  const reader = new FileReader();
+  try {
+    selectedRecordImages = await Promise.all(
+      files.map((file) => resizeImageFile(file, 640, 0.78))
+    );
 
-  reader.onload = () => {
-    selectedImageData = reader.result;
-
-    const preview = document.getElementById("imagePreview");
-    preview.textContent = "";
-    preview.style.backgroundImage = `url(${selectedImageData})`;
-  };
-
-  reader.readAsDataURL(file);
+    renderRecordImagePreview();
+  } catch (error) {
+    console.error(error);
+    alert("이미지를 불러오지 못했습니다. 다른 이미지를 선택해주세요.");
+    resetRecordImageInput();
+  } finally {
+    isRecordImageLoading = false;
+  }
 });
 async function fetchNearbyPlaces(latitude, longitude) {
   setPlaceListMessage("주변 관광지를 불러오는 중입니다.", "loading");
@@ -646,15 +776,43 @@ document.getElementById("writeRecordFromPlaceBtn").addEventListener("click", () 
   showScreen("record");
 });
 function openRecordDetail(record) {
-  document.getElementById("recordDetailTitle").textContent = record.title;
-  document.getElementById("recordDetailDate").textContent = record.date;
-  document.getElementById("recordDetailContent").textContent = record.content || "작성된 내용이 없습니다.";
-  document.getElementById("recordDetailRegion").textContent = record.region || "지역 정보 없음";
+  document.getElementById("recordDetailTitle").textContent = record.title || "여행 제목";
+  document.getElementById("recordDetailDate").textContent = record.date || "여행 날짜";
+  document.getElementById("recordDetailContent").textContent =
+    record.content || "작성된 내용이 없습니다.";
+  document.getElementById("recordDetailRegion").textContent =
+    record.region || "지역 정보 없음";
 
+  const images = getRecordImages(record);
   const detailImage = document.getElementById("recordDetailImage");
+  const detailImages = document.getElementById("recordDetailImages");
 
-  if (record.image) {
-    setImageBackground(detailImage, record.image, "default-detail-img");
+  detailImages.innerHTML = "";
+
+  if (images.length > 0) {
+    setImageBackground(detailImage, images[0], "default-detail-img");
+
+    images.forEach((imageUrl, index) => {
+      const image = document.createElement("div");
+      image.className = "record-detail-thumb";
+      image.style.backgroundImage = `url(${imageUrl})`;
+
+      if (index === 0) {
+        image.classList.add("selected");
+      }
+
+      image.addEventListener("click", () => {
+        setImageBackground(detailImage, imageUrl, "default-detail-img");
+
+        detailImages.querySelectorAll(".record-detail-thumb").forEach((thumb) => {
+          thumb.classList.remove("selected");
+        });
+
+        image.classList.add("selected");
+      });
+
+      detailImages.appendChild(image);
+    });
   } else {
     setDefaultBackground(detailImage, "default-detail-img");
   }
