@@ -228,6 +228,7 @@ document.getElementById("saveRecordBtn").addEventListener("click", () => {
   updateMyStats();
   updateTravelMapCounts();
   updateMascotBook();
+  renderTravelMapDashboard();
 
   document.getElementById("recordTitle").value = "";
   document.getElementById("recordContent").value = "";
@@ -449,6 +450,7 @@ function deleteTravelRecord(index) {
   updateMyStats();
   updateTravelMapCounts();
   updateMascotBook();
+  renderTravelMapDashboard();
 }
 document.getElementById("recordImageInput").addEventListener("change", async (event) => {
   const files = Array.from(event.target.files || []);
@@ -900,6 +902,7 @@ function updateMyStats() {
 }
 document.getElementById("openTravelMapBtn").addEventListener("click", () => {
   updateTravelMapCounts();
+  renderTravelMapDashboard();
   showScreen("travelMap");
 });
 
@@ -960,6 +963,41 @@ function updateRegionName(latitude, longitude) {
     }
   );
 }
+async function loadKoreaSvgMap() {
+  const mapContainer = document.getElementById("koreaSvgMap");
+
+  if (!mapContainer) return;
+
+  try {
+    const response = await fetch("assets/korea-map.svg");
+
+    if (!response.ok) {
+      throw new Error(`SVG load failed: ${response.status}`);
+    }
+
+    const svgText = await response.text();
+    mapContainer.innerHTML = svgText;
+
+    const svg = mapContainer.querySelector("svg");
+
+    if (!svg) {
+      throw new Error("불러온 파일에서 SVG 요소를 찾지 못했습니다.");
+    }
+
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "대한민국 지역별 방문 지도");
+
+    updateTravelMapCounts();
+  } catch (error) {
+    console.error(error);
+
+    mapContainer.innerHTML = `
+      <p class="empty-text">
+        대한민국 지도를 불러오지 못했습니다.
+      </p>
+    `;
+  }
+}
 function updateTravelMapCounts() {
   const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
 
@@ -994,6 +1032,128 @@ function updateTravelMapCounts() {
 
     const countText = regionEl.querySelector("span");
     countText.textContent = `${count}회`;
+  });
+}
+function getTravelRecords() {
+  return JSON.parse(localStorage.getItem("travelRecords")) || [];
+}
+
+function renderTravelMapDashboard() {
+  const records = getTravelRecords();
+  const visitedRegions = getVisitedRegions(records);
+  const mostVisited = getMostVisitedRegion(records);
+  const recentRegion = getRecentRegion(records);
+  const topRegions = getTopRegions(records, 3);
+
+  const totalCountElement = document.getElementById("travelMapTotalCount");
+  const visitedCountElement = document.getElementById("travelMapVisitedCount");
+  const regionCountElement = document.getElementById("travelMapRegionCount");
+  const recentRegionElement = document.getElementById("travelMapRecentRegion");
+  const recentDateElement = document.getElementById("travelMapRecentDate");
+  const topRegionElement = document.getElementById("travelMapTopRegion");
+  const topCountElement = document.getElementById("travelMapTopCount");
+
+  if (totalCountElement) {
+    totalCountElement.textContent = records.length;
+  }
+
+  if (visitedCountElement) {
+    visitedCountElement.textContent = `${visitedRegions.length} / ${REGION_NAMES.length}`;
+  }
+
+  if (regionCountElement) {
+    regionCountElement.textContent = visitedRegions.length;
+  }
+
+  if (recentRegionElement) {
+    recentRegionElement.textContent = recentRegion.region || "없음";
+  }
+
+  if (recentDateElement) {
+    recentDateElement.textContent = recentRegion.date || "기록 없음";
+  }
+
+  if (topRegionElement) {
+    topRegionElement.textContent = mostVisited.region || "없음";
+  }
+
+  if (topCountElement) {
+    topCountElement.textContent =
+      mostVisited.count > 0 ? `${mostVisited.count}회 방문` : "0회 방문";
+  }
+
+  renderTravelMapTopThree(topRegions);
+  renderTravelMapRegionList(visitedRegions);
+}
+
+function renderTravelMapTopThree(topRegions) {
+  const container = document.getElementById("travelMapTopThree");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (topRegions.length === 0) {
+    container.innerHTML = `
+      <p class="empty-text">아직 방문 기록이 없습니다.</p>
+    `;
+    return;
+  }
+
+  const medals = ["🥇", "🥈", "🥉"];
+
+  topRegions.forEach((item, index) => {
+    const card = document.createElement("article");
+    card.className = "travel-top-card";
+
+    card.innerHTML = `
+      <span class="travel-top-medal">${medals[index]}</span>
+      <strong>${item.region}</strong>
+      <span>${item.count}회</span>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function renderTravelMapRegionList(visitedRegions) {
+  const container = document.getElementById("travelMapRegionList");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (visitedRegions.length === 0) {
+    container.innerHTML = `
+      <p class="empty-text">아직 방문 기록이 없습니다.</p>
+    `;
+    return;
+  }
+
+  const maxCount = visitedRegions[0].count;
+
+  visitedRegions.forEach((item, index) => {
+    const row = document.createElement("div");
+    row.className = "travel-region-item";
+
+    const percentage =
+      maxCount > 0 ? Math.max((item.count / maxCount) * 100, 8) : 0;
+
+    row.innerHTML = `
+      <span class="travel-region-rank">${index + 1}</span>
+
+      <div class="travel-region-info">
+        <strong>${item.region}</strong>
+
+        <div class="travel-region-bar">
+          <span style="width: ${percentage}%"></span>
+        </div>
+      </div>
+
+      <span class="travel-region-count">${item.count}회</span>
+    `;
+
+    container.appendChild(row);
   });
 }
 function updateMascotBook() {
@@ -1140,15 +1300,19 @@ function getHomeProfile() {
   };
 }
 
-function getVisitedRegions(records) {
-  return [...new Set(records.map((record) => record.region).filter(Boolean))];
+function getHomeVisitedRegionNames(records) {
+  return [...new Set(
+    records
+      .map((record) => normalizeRegionName(record.region))
+      .filter(Boolean)
+  )];
 }
 
 function renderHome() {
   const profile = getHomeProfile();
   const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
-  const visitedRegions = getVisitedRegions(records);
-
+  const visitedRegions = getHomeVisitedRegionNames(records);
+  
   document.getElementById("homeGreeting").textContent =
     records.length > 0
       ? "최근 여행 기록을 확인해보세요"
@@ -1231,6 +1395,7 @@ document.getElementById("homeGoMyBtn").addEventListener("click", () => {
 
 document.getElementById("homeGoMapBtn").addEventListener("click", () => {
   updateTravelMapCounts();
+  renderTravelMapDashboard();
   showScreen("travelMap");
 });
 
@@ -1238,5 +1403,11 @@ document.getElementById("homeGoMascotBtn").addEventListener("click", () => {
   updateMascotBook();
   showScreen("mascotBook");
 });
+document.getElementById("openTravelMapBtn").addEventListener("click", () => {
+  updateTravelMapCounts();
+  renderTravelMapDashboard();
+  showScreen("travelMap");
+});
 
 renderHome();
+loadKoreaSvgMap();

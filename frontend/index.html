@@ -293,41 +293,107 @@
       </div>
     </section>
     <section id="travelMap" class="screen">
-      <header class="profile-header">
-        <button id="backToMyFromTravelMap" class="back-btn">←</button>
-        <h2>나의 방문 현황</h2>
-        <span></span>
-      </header>
+     <header class="travel-map-header">
+       <button id="backToMyFromTravelMap" class="back-btn" type="button">←</button>
+       <h2>여행 지도</h2>
+       <span class="travel-map-brand">Travel Mate</span>
+     </header>
 
-      <div class="travel-map-card">
-        <h3>Travel Mate</h3>
-
-        <div class="korea-map-mock">
-          <div class="region r-incheon lv-region-0" data-region="인천광역시">인천<br><span>0회</span></div>
-          <div class="region r-seoul lv-region-0" data-region="서울특별시">서울<br><span>0회</span></div>
-          <div class="region r-gyeonggi lv-region-0" data-region="경기도">경기<br><span>0회</span></div>
-          <div class="region r-gangwon lv-region-0" data-region="강원특별자치도">강원<br><span>0회</span></div>
-          <div class="region r-chungbuk lv-region-0" data-region="충청북도">충북<br><span>0회</span></div>
-          <div class="region r-chungnam lv-region-0" data-region="충청남도">충남<br><span>0회</span></div>
-          <div class="region r-gyeongbuk lv-region-0" data-region="경상북도">경북<br><span>0회</span></div>
-          <div class="region r-daegu lv-region-0" data-region="대구광역시">대구<br><span>0회</span></div>
-          <div class="region r-gyeongnam lv-region-0" data-region="경상남도">경남<br><span>0회</span></div>
-          <div class="region r-busan lv-region-0" data-region="부산광역시">부산<br><span>0회</span></div>
-          <div class="region r-jeonbuk lv-region-0" data-region="전라북도">전북<br><span>0회</span></div>
-          <div class="region r-gwangju lv-region-0" data-region="광주광역시">광주<br><span>0회</span></div>
-          <div class="region r-jeonnam lv-region-0" data-region="전라남도">전남<br><span>0회</span></div>
-          <div class="region r-jeju lv-region-0" data-region="제주특별자치도">제주<br><span>0회</span></div>
-        </div>
-
-        <div class="map-legend">
-          <span>방문 횟수</span>
-          <div><i class="lv0"></i>0회</div>
-          <div><i class="lv1"></i>1회</div>
-          <div><i class="lv2"></i>3회</div>
-          <div><i class="lv3"></i>10회 이상</div>
-        </div>
+     <section class="travel-map-hero card">
+      <div class="travel-map-svg-wrap">
+       <div id="koreaSvgMap" class="korea-svg-map">
+        <p class="loading-text">대한민국 지도를 불러오는 중입니다.</p>
+       </div>
       </div>
-    </section>
+
+      <div class="travel-map-status">
+       <h3>나의 방문 현황</h3>
+       <p>
+         방문 지역
+         <strong id="travelMapVisitedCount">0 / 17</strong>
+        </p>
+      </div>
+
+      <div class="travel-map-legend">
+       <div>
+        <i class="legend-color legend-level-0"></i>
+        <span>0회</span>
+       </div>
+       <div>
+        <i class="legend-color legend-level-1"></i>
+        <span>1회</span>
+       </div>
+       <div>
+        <i class="legend-color legend-level-2"></i>
+        <span>2~3회</span>
+       </div>
+       <div>
+        <i class="legend-color legend-level-3"></i>
+        <span>4회 이상</span>
+       </div>
+      </div>
+  </section>
+
+  <section class="travel-summary-section">
+    <h3 class="travel-section-title">여행 통계</h3>
+
+    <div class="travel-summary-grid">
+      <article class="travel-summary-card card">
+        <span class="travel-summary-icon">🧳</span>
+        <div>
+          <span>총 여행</span>
+          <strong id="travelMapTotalCount">0</strong>
+          <small>기록한 여행의 총 횟수</small>
+        </div>
+      </article>
+
+      <article class="travel-summary-card card">
+        <span class="travel-summary-icon">📍</span>
+        <div>
+          <span>방문 지역</span>
+          <strong id="travelMapRegionCount">0</strong>
+          <small>방문한 지역 수</small>
+        </div>
+      </article>
+
+      <article class="travel-summary-card card">
+        <span class="travel-summary-icon">📅</span>
+        <div>
+          <span>최근 방문</span>
+          <strong id="travelMapRecentRegion">없음</strong>
+          <small id="travelMapRecentDate">기록 없음</small>
+        </div>
+      </article>
+
+      <article class="travel-summary-card card">
+        <span class="travel-summary-icon">🏆</span>
+        <div>
+          <span>최다 방문</span>
+          <strong id="travelMapTopRegion">없음</strong>
+          <small id="travelMapTopCount">0회 방문</small>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="travel-top-section card">
+    <h3 class="travel-section-title">TOP 3 지역</h3>
+    <div id="travelMapTopThree" class="travel-top-three">
+      <p class="empty-text">아직 방문 기록이 없습니다.</p>
+    </div>
+  </section>
+
+  <section class="travel-region-section card">
+    <div class="travel-region-header">
+      <h3 class="travel-section-title">방문 지역 목록</h3>
+      <span>방문 횟수 순</span>
+    </div>
+
+    <div id="travelMapRegionList" class="travel-region-list">
+      <p class="empty-text">아직 방문 기록이 없습니다.</p>
+    </div>
+  </section>
+</section>
     <section id="mascotBook" class="screen">
       <header class="profile-header">
         <button id="backToMyFromMascotBook" class="back-btn">←</button>
@@ -406,6 +472,7 @@
     </nav>
   </div>
   <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=59866cac221d712a98ca8fd1bde44e62&libraries=services"></script>
+  <script src="src/region.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
