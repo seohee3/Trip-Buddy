@@ -1545,3 +1545,142 @@ textarea {
 .korea-svg-map text {
   display: none;
 }
+/* 여행 지도 숫자 1~17 숨기기 */
+.korea-svg-map #path724,
+.korea-svg-map #path726,
+.korea-svg-map #path728,
+.korea-svg-map #path730,
+.korea-svg-map #path732,
+.korea-svg-map #path734,
+.korea-svg-map #path736,
+.korea-svg-map #path738,
+.korea-svg-map #path740,
+.korea-svg-map #path742,
+.korea-svg-map #path744,
+.korea-svg-map #path746,
+.korea-svg-map #path748,
+.korea-svg-map #path750,
+.korea-svg-map #path752,
+.korea-svg-map #path754,
+.korea-svg-map #path756,
+.korea-svg-map #path758,
+.korea-svg-map #path760,
+.korea-svg-map #path762,
+.korea-svg-map #path764,
+.korea-svg-map #path766,
+.korea-svg-map #path768,
+.korea-svg-map #path774,
+.korea-svg-map #path776 {
+  display: none;
+}
+/* 선택한 지역 상세 카드 */
+.travel-region-detail {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid #ece9f8;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(68, 55, 120, 0.08);
+}
+
+.travel-region-detail[hidden] {
+  display: none;
+}
+
+.travel-region-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.travel-region-detail-label {
+  display: block;
+  margin-bottom: 5px;
+  color: #8d83b8;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.travel-region-detail-header h3 {
+  margin: 0;
+  color: #29233d;
+  font-size: 19px;
+}
+
+.travel-region-detail-close {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #f2effb;
+  color: #766ba7;
+  font-size: 21px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.travel-region-detail-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.travel-region-detail-stats > div {
+  padding: 13px;
+  border-radius: 14px;
+  background: #f7f5fc;
+}
+
+.travel-region-detail-stats span {
+  display: block;
+  margin-bottom: 6px;
+  color: #8a839f;
+  font-size: 12px;
+}
+
+.travel-region-detail-stats strong {
+  color: #5c3dff;
+  font-size: 15px;
+}
+
+.travel-region-detail-records {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.travel-region-record-item {
+  width: 100%;
+  padding: 12px 13px;
+  border: none;
+  border-radius: 13px;
+  background: #faf9fd;
+  text-align: left;
+  cursor: pointer;
+}
+
+.travel-region-record-item strong {
+  display: block;
+  overflow: hidden;
+  color: #302a45;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.travel-region-record-item span {
+  display: block;
+  margin-top: 5px;
+  color: #948ca8;
+  font-size: 12px;
+}
+
+/* 현재 선택된 지도 지역 */
+.korea-svg-map path[data-region].selected-region {
+  stroke: #5c3dff !important;
+  stroke-width: 4 !important;
+  filter: drop-shadow(0 0 5px rgba(92, 61, 255, 0.35));
+}

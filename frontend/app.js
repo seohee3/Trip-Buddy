@@ -1099,7 +1099,8 @@ async function loadKoreaSvgMap() {
     svg.setAttribute("aria-label", "대한민국 지역별 방문 지도");
 
     bindSvgRegionData(svg);
-    renderTravelMapDashboard();
+    bindTravelMapRegionEvents();
+    updateTravelMapCounts();
   } catch (error) {
     console.error(error);
 
@@ -1147,6 +1148,161 @@ function updateTravelMapCounts() {
 }
 function getTravelRecords() {
   return JSON.parse(localStorage.getItem("travelRecords")) || [];
+}
+function getRecordStartDate(record) {
+  if (!record?.date) return "";
+
+  return record.date
+    .split("~")[0]
+    .trim()
+    .replaceAll(".", "-");
+}
+function clearSelectedMapRegion() {
+  document
+    .querySelectorAll("#koreaSvgMap path.selected-region")
+    .forEach((path) => {
+      path.classList.remove("selected-region");
+    });
+}
+
+function highlightSelectedMapRegion(regionName) {
+  clearSelectedMapRegion();
+
+  document
+    .querySelectorAll("#koreaSvgMap path[data-region]")
+    .forEach((path) => {
+      const pathRegion = normalizeRegionName(path.dataset.region);
+
+      if (pathRegion === regionName) {
+        path.classList.add("selected-region");
+      }
+    });
+}
+
+function closeTravelRegionDetail() {
+  const detailCard = document.getElementById("travelRegionDetail");
+
+  if (detailCard) {
+    detailCard.hidden = true;
+  }
+
+  clearSelectedMapRegion();
+}
+function renderTravelRegionDetail(regionName) {
+  const normalizedRegion = normalizeRegionName(regionName);
+  const records = getTravelRecords();
+
+  const regionRecords = records.filter((record) => {
+    return normalizeRegionName(record.region) === normalizedRegion;
+  });
+
+  regionRecords.sort((a, b) => {
+    return getRecordStartDate(b).localeCompare(
+      getRecordStartDate(a)
+    );
+  });
+
+  const detailCard =
+    document.getElementById("travelRegionDetail");
+
+  const nameElement =
+    document.getElementById("travelRegionDetailName");
+
+  const countElement =
+    document.getElementById("travelRegionDetailCount");
+
+  const dateElement =
+    document.getElementById("travelRegionDetailDate");
+
+  const recordContainer =
+    document.getElementById("travelRegionDetailRecords");
+
+  if (
+    !detailCard ||
+    !nameElement ||
+    !countElement ||
+    !dateElement ||
+    !recordContainer
+  ) {
+    return;
+  }
+
+  nameElement.textContent = normalizedRegion;
+
+  countElement.textContent =
+    `${regionRecords.length}회`;
+
+  dateElement.textContent =
+    regionRecords[0]?.date || "기록 없음";
+
+  recordContainer.innerHTML = "";
+
+  if (regionRecords.length === 0) {
+    recordContainer.innerHTML = `
+      <p class="empty-text">
+        아직 이 지역에 저장된 여행 기록이 없습니다.
+      </p>
+    `;
+  } else {
+    regionRecords.forEach((record) => {
+      const recordButton =
+        document.createElement("button");
+
+      recordButton.type = "button";
+      recordButton.className =
+        "travel-region-record-item";
+
+      recordButton.innerHTML = `
+        <strong>${record.title || "제목 없는 여행"}</strong>
+        <span>${record.date || "날짜 정보 없음"}</span>
+      `;
+
+      recordButton.addEventListener("click", () => {
+        openRecordDetail(record);
+      });
+
+      recordContainer.appendChild(recordButton);
+    });
+  }
+
+  highlightSelectedMapRegion(normalizedRegion);
+  detailCard.hidden = false;
+
+  detailCard.scrollIntoView({
+    behavior: "smooth",
+    block: "nearest",
+  });
+}
+function bindTravelMapRegionEvents() {
+  const mapContainer =
+    document.getElementById("koreaSvgMap");
+
+  if (!mapContainer) return;
+
+  mapContainer
+    .querySelectorAll("path[data-region]")
+    .forEach((path) => {
+      path.addEventListener("click", () => {
+        renderTravelRegionDetail(
+          path.dataset.region
+        );
+      });
+
+      path.addEventListener("keydown", (event) => {
+        if (
+          event.key !== "Enter" &&
+          event.key !== " "
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+
+        renderTravelRegionDetail(
+          path.dataset.region
+        );
+      });
+    });
 }
 
 function renderTravelMapDashboard() {
@@ -1515,7 +1671,12 @@ document.getElementById("homeGoMascotBtn").addEventListener("click", () => {
   updateMascotBook();
   showScreen("mascotBook");
 });
-
+document
+  .getElementById("closeTravelRegionDetail")
+  ?.addEventListener(
+    "click",
+    closeTravelRegionDetail
+  );
 
 renderHome();
 loadKoreaSvgMap();

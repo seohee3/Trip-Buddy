@@ -333,6 +333,43 @@
        </div>
       </div>
   </section>
+  <section
+   id="travelRegionDetail"
+   class="travel-region-detail card"
+   hidden
+  >
+   <div class="travel-region-detail-header">
+    <div>
+      <span class="travel-region-detail-label">선택한 지역</span>
+      <h3 id="travelRegionDetailName">지역명</h3>
+    </div>
+
+    <button
+      id="closeTravelRegionDetail"
+      class="travel-region-detail-close"
+      type="button"
+      aria-label="지역 정보 닫기"
+    >
+      ×
+    </button>
+  </div>
+
+  <div class="travel-region-detail-stats">
+    <div>
+      <span>방문 횟수</span>
+      <strong id="travelRegionDetailCount">0회</strong>
+    </div>
+
+    <div>
+      <span>최근 방문</span>
+      <strong id="travelRegionDetailDate">기록 없음</strong>
+    </div>
+  </div>
+
+  <div id="travelRegionDetailRecords" class="travel-region-detail-records">
+    <p class="empty-text">이 지역의 여행 기록이 없습니다.</p>
+  </div>
+</section>
 
   <section class="travel-summary-section">
     <h3 class="travel-section-title">여행 통계</h3>
