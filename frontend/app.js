@@ -901,10 +901,9 @@ function updateMyStats() {
     0;
 }
 document.getElementById("openTravelMapBtn").addEventListener("click", () => {
-  updateTravelMapCounts();
   renderTravelMapDashboard();
   showScreen("travelMap");
-});
+})
 
 document.getElementById("backToMyFromTravelMap").addEventListener("click", () => {
   showScreen("my");
@@ -963,6 +962,118 @@ function updateRegionName(latitude, longitude) {
     }
   );
 }
+const SVG_REGION_BINDINGS = {
+  서울특별시: [
+    "#path132",
+  ],
+
+  부산광역시: [
+    "#path94",
+    "#path96",
+    "#path98",
+  ],
+
+  대구광역시: [
+    "#path672-0",
+  ],
+
+  인천광역시: [
+    "#path338",
+    "#path356",
+    "#path352",
+    "#path334",
+    "#path336",
+    "#path348",
+    "#path340",
+    "#path368",
+  ],
+
+  광주광역시: [
+    "#path134",
+  ],
+
+  대전광역시: [
+    "#path8",
+  ],
+
+  울산광역시: [
+    "#path90",
+  ],
+
+  세종특별자치시: [
+    "#path2",
+  ],
+
+  경기도: [
+    '[fill="#F9D3B2"]',
+  ],
+
+  강원특별자치도: [
+    "#path92",
+  ],
+
+  충청북도: [
+    "#path10",
+  ],
+
+  충청남도: [
+    '[fill="#F6C1A9"]',
+  ],
+
+  전북특별자치도: [
+    '[fill="#F5C3C4"]',
+  ],
+
+  전라남도: [
+    '[fill="#DABCD9"]',
+  ],
+
+  경상북도: [
+    '[fill="#BFDFC0"]',
+    "#path88-1",
+  ],
+
+  경상남도: [
+    '[fill="#BCE1DF"]',
+  ],
+
+  제주특별자치도: [
+    "#path136",
+    "#path138",
+  ],
+};
+
+function bindSvgRegionData(svg) {
+  Object.entries(SVG_REGION_BINDINGS).forEach(
+    ([regionName, selectors]) => {
+      const matchedPaths = selectors.flatMap((selector) =>
+        Array.from(svg.querySelectorAll(selector))
+      );
+
+      const uniquePaths = [...new Set(matchedPaths)];
+
+      if (uniquePaths.length === 0) {
+        console.warn(
+          `SVG 경로를 찾지 못했습니다: ${regionName}`
+        );
+        return;
+      }
+
+      uniquePaths.forEach((path, index) => {
+        path.dataset.region = regionName;
+        path.setAttribute(
+          "aria-label",
+          regionName
+        );
+
+        if (index === 0) {
+          path.setAttribute("tabindex", "0");
+        }
+      });
+    }
+  );
+}
+
 async function loadKoreaSvgMap() {
   const mapContainer = document.getElementById("koreaSvgMap");
 
@@ -987,7 +1098,8 @@ async function loadKoreaSvgMap() {
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", "대한민국 지역별 방문 지도");
 
-    updateTravelMapCounts();
+    bindSvgRegionData(svg);
+    renderTravelMapDashboard();
   } catch (error) {
     console.error(error);
 
@@ -999,39 +1111,38 @@ async function loadKoreaSvgMap() {
   }
 }
 function updateTravelMapCounts() {
-  const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
+  const records = getTravelRecords();
+  const regionCounts = getRegionCounts(records);
 
-  const regionCounts = {};
+  const regionPaths = document.querySelectorAll(
+    "#koreaSvgMap path[data-region]"
+  );
 
-  records.forEach((record) => {
-    if (!record.region) return;
+  regionPaths.forEach((regionPath) => {
+    const regionName = normalizeRegionName(
+      regionPath.dataset.region
+    );
 
-    regionCounts[record.region] = (regionCounts[record.region] || 0) + 1;
-  });
-
-  document.querySelectorAll(".region[data-region]").forEach((regionEl) => {
-    const regionName = regionEl.dataset.region;
     const count = regionCounts[regionName] || 0;
+    const level = getVisitLevel(count);
 
-    regionEl.classList.remove(
+    regionPath.classList.remove(
       "lv-region-0",
       "lv-region-1",
       "lv-region-2",
       "lv-region-3"
     );
 
-    if (count === 0) {
-      regionEl.classList.add("lv-region-0");
-    } else if (count === 1) {
-      regionEl.classList.add("lv-region-1");
-    } else if (count <= 3) {
-      regionEl.classList.add("lv-region-2");
-    } else {
-      regionEl.classList.add("lv-region-3");
-    }
+    regionPath.classList.add(
+      `lv-region-${level}`
+    );
 
-    const countText = regionEl.querySelector("span");
-    countText.textContent = `${count}회`;
+    regionPath.dataset.visitCount = count;
+
+    regionPath.setAttribute(
+      "aria-label",
+      `${regionName}, ${count}회 방문`
+    );
   });
 }
 function getTravelRecords() {
@@ -1040,6 +1151,8 @@ function getTravelRecords() {
 
 function renderTravelMapDashboard() {
   const records = getTravelRecords();
+
+  updateTravelMapCounts();
   const visitedRegions = getVisitedRegions(records);
   const mostVisited = getMostVisitedRegion(records);
   const recentRegion = getRecentRegion(records);
@@ -1394,7 +1507,6 @@ document.getElementById("homeGoMyBtn").addEventListener("click", () => {
 });
 
 document.getElementById("homeGoMapBtn").addEventListener("click", () => {
-  updateTravelMapCounts();
   renderTravelMapDashboard();
   showScreen("travelMap");
 });
@@ -1403,11 +1515,7 @@ document.getElementById("homeGoMascotBtn").addEventListener("click", () => {
   updateMascotBook();
   showScreen("mascotBook");
 });
-document.getElementById("openTravelMapBtn").addEventListener("click", () => {
-  updateTravelMapCounts();
-  renderTravelMapDashboard();
-  showScreen("travelMap");
-});
+
 
 renderHome();
 loadKoreaSvgMap();

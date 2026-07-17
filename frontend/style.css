@@ -1455,44 +1455,93 @@ textarea {
 }
 
 .korea-svg-map [data-region] {
-  fill: var(--unvisited);
-  stroke: #ffffff;
-  stroke-width: 1.4;
   cursor: pointer;
   transform-box: fill-box;
   transform-origin: center;
   transition:
-    fill 0.2s ease,
-    filter 0.2s ease,
-    transform 0.2s ease;
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+
+
+.korea-svg-map [data-region].lv-region-0 path {
+  fill: var(--unvisited) !important;
+}
+
+.korea-svg-map path[data-region] {
+  fill: var(--unvisited) !important;
+  stroke: #ffffff !important;
+  stroke-width: 1.4;
+  cursor: pointer;
+
+  transform-box: fill-box;
+  transform-origin: center;
+
+  transition:
+    fill 0.25s ease,
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+.korea-svg-map path[data-region].lv-region-0 {
+  fill: var(--unvisited) !important;
+}
+
+.korea-svg-map path[data-region].lv-region-1 {
+  fill: var(--visited-1) !important;
+}
+
+.korea-svg-map path[data-region].lv-region-2 {
+  fill: var(--visited-2) !important;
+}
+
+.korea-svg-map path[data-region].lv-region-3 {
+  fill: var(--visited-3) !important;
+}
+
+.korea-svg-map path[data-region]:hover {
+  transform: scale(1.015);
+  filter: brightness(0.96);
+}
+
+.korea-svg-map path[data-region]:active {
+  transform: scale(0.985);
+}
+
+.korea-svg-map path[data-region]:focus-visible {
+  outline: none;
+  filter:
+    drop-shadow(
+      0 0 5px rgba(108, 99, 255, 0.65)
+    );
+}
+.korea-svg-map [data-region].lv-region-2 path {
+  fill: var(--visited-2) !important;
+}
+
+.korea-svg-map [data-region].lv-region-3 path {
+  fill: var(--visited-3) !important;
 }
 
 .korea-svg-map [data-region]:hover {
-  transform: scale(1.02);
-  filter: brightness(0.97);
+  transform: scale(1.015);
+  filter: brightness(0.96);
 }
 
 .korea-svg-map [data-region]:active {
-  transform: scale(0.99);
+  transform: scale(0.985);
 }
 
-.korea-svg-map .lv-region-0 {
-  fill: var(--unvisited);
-}
-
-.korea-svg-map .lv-region-1 {
-  fill: var(--visited-1);
-}
-
-.korea-svg-map .lv-region-2 {
-  fill: var(--visited-2);
-}
-
-.korea-svg-map .lv-region-3 {
-  fill: var(--visited-3);
+.korea-svg-map [data-region]:focus-visible {
+  outline: none;
+  filter: drop-shadow(0 0 5px rgba(108, 99, 255, 0.65));
 }
 .travel-top-medal {
   display: block;
   font-size: 28px;
   line-height: 1;
+}
+.korea-svg-map text {
+  display: none;
 }
