@@ -2,7 +2,110 @@ const TOUR_API_KEY = "a2652d41b57533048e6566c0afca1ba6f190d1706286e228c74f843544
 const screens = document.querySelectorAll(".screen");
 let nearbyPlaces = [];
 let selectedPlace = null;
-
+const MASCOT_DATA = [
+  {
+    region: "서울특별시",
+    shortName: "서울",
+    icon: "🐯",
+    name: "서울 호랑이",
+  },
+  {
+    region: "부산광역시",
+    shortName: "부산",
+    icon: "🐦",
+    name: "부산 갈매기",
+  },
+  {
+    region: "대구광역시",
+    shortName: "대구",
+    icon: "🦁",
+    name: "대구 사자",
+  },
+  {
+    region: "인천광역시",
+    shortName: "인천",
+    icon: "✈️",
+    name: "인천 여행새",
+  },
+  {
+    region: "광주광역시",
+    shortName: "광주",
+    icon: "🦋",
+    name: "광주 나비",
+  },
+  {
+    region: "대전광역시",
+    shortName: "대전",
+    icon: "🌙",
+    name: "대전 꿈별이",
+  },
+  {
+    region: "울산광역시",
+    shortName: "울산",
+    icon: "🐋",
+    name: "울산 고래",
+  },
+  {
+    region: "세종특별자치시",
+    shortName: "세종",
+    icon: "📚",
+    name: "세종 책곰",
+  },
+  {
+    region: "경기도",
+    shortName: "경기",
+    icon: "🐻",
+    name: "경기 곰",
+  },
+  {
+    region: "강원특별자치도",
+    shortName: "강원",
+    icon: "🐐",
+    name: "강원 산양",
+  },
+  {
+    region: "충청북도",
+    shortName: "충북",
+    icon: "🍎",
+    name: "충북 사과곰",
+  },
+  {
+    region: "충청남도",
+    shortName: "충남",
+    icon: "🦭",
+    name: "충남 바다표범",
+  },
+  {
+    region: "전북특별자치도",
+    shortName: "전북",
+    icon: "🐇",
+    name: "전북 들토끼",
+  },
+  {
+    region: "전라남도",
+    shortName: "전남",
+    icon: "🐙",
+    name: "전남 문어",
+  },
+  {
+    region: "경상북도",
+    shortName: "경북",
+    icon: "🦊",
+    name: "경북 여우",
+  },
+  {
+    region: "경상남도",
+    shortName: "경남",
+    icon: "🐢",
+    name: "경남 거북이",
+  },
+  {
+    region: "제주특별자치도",
+    shortName: "제주",
+    icon: "🗿",
+    name: "제주 돌하르방",
+  },
+];
 function setPlaceListMessage(message, type = "empty") {
   const placeList = document.querySelector(".place-list");
 
@@ -1426,18 +1529,154 @@ function renderTravelMapRegionList(visitedRegions) {
   });
 }
 function updateMascotBook() {
-  const records = JSON.parse(localStorage.getItem("travelRecords")) || [];
-  const visitedRegions = records.map((record) => record.region);
+  const grid = document.getElementById("mascotGrid");
 
-  document.querySelectorAll(".mascot-card").forEach((card) => {
-    const region = card.dataset.region;
+  if (!grid) return;
 
-    if (visitedRegions.includes(region)) {
-      card.classList.add("unlocked");
-    } else {
-      card.classList.remove("unlocked");
+  const records = getTravelRecords();
+
+  const visitedRegions = new Set(
+    records
+      .map((record) =>
+        normalizeRegionName(record.region)
+      )
+      .filter(Boolean)
+  );
+
+  grid.innerHTML = "";
+
+  MASCOT_DATA.forEach((mascot) => {
+    const normalizedRegion =
+      normalizeRegionName(mascot.region);
+
+    const isUnlocked =
+      visitedRegions.has(normalizedRegion);
+
+    const regionRecords = records.filter((record) => {
+      return (
+        normalizeRegionName(record.region) ===
+        normalizedRegion
+      );
+    });
+
+    const card = document.createElement("article");
+
+    card.className = `mascot-card${
+      isUnlocked ? " unlocked" : ""
+    }`;
+
+    card.dataset.region = normalizedRegion;
+
+    card.innerHTML = `
+      <div class="mascot-status">
+        ${isUnlocked ? "수집 완료" : "미수집"}
+      </div>
+
+      <div class="mascot-icon">
+        ${isUnlocked ? mascot.icon : "❔"}
+      </div>
+
+      <strong>${mascot.shortName}</strong>
+
+      <span class="mascot-name">
+        ${isUnlocked ? mascot.name : "아직 만나지 못했어요"}
+      </span>
+
+      <small>
+        ${
+          isUnlocked
+            ? `${regionRecords.length}회 방문`
+            : "여행 기록으로 해금"
+        }
+      </small>
+    `;
+
+    if (isUnlocked) {
+      card.addEventListener("click", () => {
+        showScreen("travelMap");
+
+        setTimeout(() => {
+          renderTravelRegionDetail(
+            normalizedRegion
+          );
+        }, 100);
+      });
     }
+
+    grid.appendChild(card);
   });
+
+  const unlockedCount = MASCOT_DATA.filter(
+    (mascot) =>
+      visitedRegions.has(
+        normalizeRegionName(mascot.region)
+      )
+  ).length;
+
+  const totalCount = MASCOT_DATA.length;
+
+  const progressPercent =
+    totalCount > 0
+      ? Math.round(
+          (unlockedCount / totalCount) * 100
+        )
+      : 0;
+
+    const unlockedCountElement =
+    document.getElementById("mascotUnlockedCount");
+
+  const totalCountElement =
+    document.getElementById("mascotTotalCount");
+
+  const percentElement =
+    document.getElementById("mascotProgressPercent");
+
+  const progressFillElement =
+    document.getElementById("mascotProgressFill");
+
+  const messageElement =
+    document.getElementById("mascotProgressMessage");
+
+  if (unlockedCountElement) {
+    unlockedCountElement.textContent = unlockedCount;
+  }
+
+  if (totalCountElement) {
+    totalCountElement.textContent = totalCount;
+  }
+
+  if (percentElement) {
+    percentElement.textContent = `${progressPercent}%`;
+  }
+
+  if (progressFillElement) {
+    progressFillElement.style.width =
+      `${progressPercent}%`;
+  }
+
+  if (messageElement) {
+    if (unlockedCount === 0) {
+      messageElement.textContent =
+        "첫 여행 기록을 남기고 마스코트를 만나보세요.";
+    } else if (unlockedCount === totalCount) {
+      messageElement.textContent =
+        "전국 마스코트 수집을 완료했어요!";
+    } else {
+      messageElement.textContent =
+        `${totalCount - unlockedCount}개 지역이 남았어요.`;
+    }
+  }
+
+  if (unlockedCount === 0) {
+    messageElement.textContent =
+      "첫 여행 기록을 남기고 마스코트를 만나보세요.";
+  } else if (unlockedCount === totalCount) {
+    messageElement.textContent =
+      "전국 마스코트 수집을 완료했어요!";
+  } else {
+    messageElement.textContent =
+      `${totalCount - unlockedCount}개 지역이 남았어요.`;
+  }
 }
 
 document.getElementById("openMascotBookBtn").addEventListener("click", () => {
@@ -1602,7 +1841,14 @@ function renderHome() {
 
   document.getElementById("homeRecordCount").textContent = records.length;
   document.getElementById("homeVisitedRegionCount").textContent = visitedRegions.length;
-  document.getElementById("homeMascotCount").textContent = visitedRegions.length;
+  const collectedMascotCount =
+    MASCOT_DATA.filter((mascot) =>
+      visitedRegions.includes(
+        normalizeRegionName(mascot.region)
+      )
+    ).length;
+
+  document.getElementById("homeMascotCount").textContent = collectedMascotCount;
 
   const list = document.getElementById("homeRecentRecords");
   list.innerHTML = "";
@@ -1671,12 +1917,26 @@ document.getElementById("homeGoMascotBtn").addEventListener("click", () => {
   updateMascotBook();
   showScreen("mascotBook");
 });
-document
-  .getElementById("closeTravelRegionDetail")
-  ?.addEventListener(
-    "click",
-    closeTravelRegionDetail
-  );
 
-renderHome();
-loadKoreaSvgMap();
+
+function initializeApp() {
+  try {
+    renderHome();
+  } catch (error) {
+    console.error("홈 화면 초기화 오류:", error);
+  }
+
+  try {
+    loadKoreaSvgMap();
+  } catch (error) {
+    console.error("여행 지도 초기화 오류:", error);
+  }
+
+  try {
+    updateMascotBook();
+  } catch (error) {
+    console.error("마스코트 도감 초기화 오류:", error);
+  }
+}
+
+initializeApp();

@@ -437,42 +437,30 @@
         <h2>마스코트 도감</h2>
       </header>
 
-      <div class="mascot-grid">
-        <div class="mascot-card" data-region="서울특별시">
-          <div class="mascot-icon">🐯</div>
-          <strong>서울</strong>
-          <span>해치</span>
+      <section class="mascot-progress-card">
+       <div class="mascot-progress-header">
+        <div>
+         <span>수집 진행률</span>
+         <strong>
+          <b id="mascotUnlockedCount">0</b>
+          /
+          <b id="mascotTotalCount">17</b>
+         </strong>
         </div>
 
-        <div class="mascot-card" data-region="경기도">
-          <div class="mascot-icon">🐻</div>
-          <strong>경기</strong>
-          <span>봉공이</span>
-        </div>
+        <span id="mascotProgressPercent">0%</span>
+       </div>
 
-        <div class="mascot-card" data-region="부산광역시">
-          <div class="mascot-icon">🐦</div>
-          <strong>부산</strong>
-          <span>부기</span>
-        </div>
+       <div class="mascot-progress-bar">
+        <span id="mascotProgressFill"></span>
+       </div>
 
-        <div class="mascot-card" data-region="제주특별자치도">
-          <div class="mascot-icon">🗿</div>
-          <strong>제주</strong>
-          <span>돌하르방</span>
-        </div>
+       <p id="mascotProgressMessage">
+        여행 기록을 남기면 지역 마스코트가 해금돼요.
+      </p>
+    </section>
 
-        <div class="mascot-card" data-region="강원특별자치도">
-          <div class="mascot-icon">⛰️</div>
-          <strong>강원</strong>
-          <span>반비</span>
-        </div>
-
-        <div class="mascot-card" data-region="인천광역시">
-          <div class="mascot-icon">✈️</div>
-          <strong>인천</strong>
-          <span>버미</span>
-        </div>
+<div id="mascotGrid" class="mascot-grid"></div>
       </div>
     </section>
 
