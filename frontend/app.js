@@ -1940,3 +1940,354 @@ function initializeApp() {
 }
 
 initializeApp();
+/* =========================
+   Mate Prototype
+========================= */
+
+const tripBuddyMateData = [
+  {
+    id: 1,
+    name: "여행자_김르림",
+    age: 28,
+    region: "서울",
+    match: 89,
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80",
+    sub: "여행을 좋아하는 모리",
+    photos: [
+      "https://images.unsplash.com/photo-1549893072-4bc678117f45?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=300&q=80"
+    ]
+  },
+  {
+    id: 2,
+    name: "여행러버_민수",
+    age: 30,
+    region: "서울",
+    match: 86,
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80",
+    sub: "맛집과 산책을 좋아해요",
+    photos: [
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=300&q=80"
+    ]
+  },
+  {
+    id: 3,
+    name: "트립메이트_지은",
+    age: 26,
+    region: "서울",
+    match: 83,
+    image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=300&q=80",
+    sub: "사진 찍는 여행을 좋아해요",
+    photos: [
+      "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1549893072-4bc678117f45?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=300&q=80"
+    ]
+  },
+  {
+    id: 4,
+    name: "여행하는_준호",
+    age: 29,
+    region: "서울",
+    match: 81,
+    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80",
+    sub: "계획적인 여행을 선호해요",
+    photos: [
+      "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1549893072-4bc678117f45?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?auto=format&fit=crop&w=300&q=80"
+    ]
+  },
+  {
+    id: 5,
+    name: "트래블러_소희",
+    age: 27,
+    region: "서울",
+    match: 70,
+    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80",
+    sub: "조용한 카페와 전시를 좋아해요",
+    photos: [
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1549893072-4bc678117f45?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=300&q=80",
+      "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?auto=format&fit=crop&w=300&q=80"
+    ]
+  }
+];
+
+let tripBuddyCurrentMate = tripBuddyMateData[0];
+let tripBuddyCompanionStartAt = null;
+let tripBuddyCompanionInterval = null;
+
+function tripBuddyRenderMateList() {
+  const mateList = document.getElementById("mateList");
+  if (!mateList) return;
+
+  mateList.innerHTML = tripBuddyMateData
+    .map((mate) => {
+      return `
+        <article class="mate-list-card" onclick="tripBuddyOpenMateProfile(${mate.id})">
+          <img src="${mate.image}" alt="${mate.name}" />
+
+          <div class="mate-list-info">
+            <h3>${mate.name}</h3>
+            <p>${mate.age}세 · ${mate.region}</p>
+            <span class="match-badge">✧ 매칭률 ${mate.match}%</span>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function tripBuddyOpenMateProfile(mateId) {
+  const mate = tripBuddyMateData.find((item) => item.id === mateId);
+  if (!mate) return;
+
+  tripBuddyCurrentMate = mate;
+
+  document.getElementById("mateProfileName").textContent = mate.name;
+  document.getElementById("mateProfileSub").textContent = mate.sub;
+  document.getElementById("mateProfileImage").src = mate.image;
+
+  const photoGrid = document.getElementById("matePhotoGrid");
+  if (photoGrid) {
+    photoGrid.innerHTML = mate.photos
+      .map((photo) => `<img src="${photo}" alt="여행 사진" />`)
+      .join("");
+  }
+
+  showScreen("mateProfile");
+}
+
+function tripBuddyOpenChat() {
+  if (!tripBuddyCurrentMate) return;
+
+  document.getElementById("chatUserImg").src = tripBuddyCurrentMate.image;
+  document.getElementById("chatUserName").textContent = tripBuddyCurrentMate.name;
+  document.getElementById(
+    "chatUserSub"
+  ).textContent = `${tripBuddyCurrentMate.region} · ${tripBuddyCurrentMate.age}세`;
+
+  const chatMessages = document.getElementById("chatMessages");
+
+  chatMessages.innerHTML = `
+    <div class="chat-date">5월 20일 (월)</div>
+
+    <div class="chat-row other">
+      <img src="${tripBuddyCurrentMate.image}" alt="${tripBuddyCurrentMate.name}" />
+      <div>
+        <div class="chat-bubble">
+          안녕하세요!<br />
+          저도 6월에 제주도 여행 계획 중인데 혹시 일정 공유 가능할까요?
+        </div>
+        <span class="chat-time">오후 3:21</span>
+      </div>
+    </div>
+
+    <div class="chat-row me">
+      <div>
+        <div class="chat-bubble">
+          안녕하세요! 😊<br />
+          네, 좋아요!<br />
+          저는 6/10~6/13 일정으로 생각 중이에요.
+        </div>
+        <span class="chat-time">오후 3:24</span>
+      </div>
+    </div>
+
+    <div class="chat-row other">
+      <img src="${tripBuddyCurrentMate.image}" alt="${tripBuddyCurrentMate.name}" />
+      <div>
+        <div class="chat-bubble">
+          와 날짜가 저랑 같아요!<br />
+          혹시 어떤 여행 스타일 좋아하세요?
+        </div>
+        <span class="chat-time">오후 3:27</span>
+      </div>
+    </div>
+
+    <div class="chat-row me">
+      <div>
+        <div class="chat-bubble">
+          자연도 좋고 맛집 탐방도 좋아해요!<br />
+          너무 빡빡한 일정은 피하고 싶어요 ㅎㅎ
+        </div>
+        <span class="chat-time">오후 3:30</span>
+      </div>
+    </div>
+
+    <div class="chat-row other">
+      <img src="${tripBuddyCurrentMate.image}" alt="${tripBuddyCurrentMate.name}" />
+      <div>
+        <div class="chat-bubble">
+          저랑 취향이 비슷하시네요 ㅎㅎ<br />
+          맛집 리스트 몇 군데 추천해드릴게요!
+        </div>
+
+        <div class="chat-img-row">
+          <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=200&q=80" alt="맛집 사진" />
+          <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=200&q=80" alt="맛집 사진" />
+          <img src="https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=200&q=80" alt="맛집 사진" />
+        </div>
+
+        <span class="chat-time">오후 3:32</span>
+      </div>
+    </div>
+  `;
+
+  showScreen("mateChat");
+}
+
+function tripBuddySendChatMessage() {
+  const input = document.getElementById("chatInput");
+  const chatMessages = document.getElementById("chatMessages");
+  const message = input.value.trim();
+
+  if (!message) return;
+
+  const row = document.createElement("div");
+  row.className = "chat-row me";
+  row.innerHTML = `
+    <div>
+      <div class="chat-bubble">${message}</div>
+      <span class="chat-time">방금</span>
+    </div>
+  `;
+
+  chatMessages.appendChild(row);
+  input.value = "";
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function tripBuddyOpenCompanion() {
+  if (!tripBuddyCurrentMate) return;
+
+  document.getElementById("companionUserImg").src = tripBuddyCurrentMate.image;
+  document.getElementById("companionUserName").textContent =
+    tripBuddyCurrentMate.name;
+  document.getElementById(
+    "companionUserSub"
+  ).textContent = `${tripBuddyCurrentMate.region} · ${tripBuddyCurrentMate.age}세`;
+
+  tripBuddyCompanionStartAt = new Date();
+
+  if (tripBuddyCompanionInterval) {
+    clearInterval(tripBuddyCompanionInterval);
+  }
+
+  tripBuddyUpdateCompanionTime();
+  tripBuddyCompanionInterval = setInterval(tripBuddyUpdateCompanionTime, 1000);
+
+  showScreen("companion");
+}
+
+function tripBuddyUpdateCompanionTime() {
+  if (!tripBuddyCompanionStartAt) return;
+
+  const now = new Date();
+  const diff = Math.floor((now - tripBuddyCompanionStartAt) / 1000);
+
+  const hours = String(Math.floor(diff / 3600)).padStart(2, "0");
+  const minutes = String(Math.floor((diff % 3600) / 60)).padStart(2, "0");
+  const seconds = String(diff % 60).padStart(2, "0");
+
+  document.getElementById("companionTime").textContent =
+    `${hours}:${minutes}:${seconds}`;
+}
+
+function tripBuddyEndCompanion() {
+  if (tripBuddyCompanionInterval) {
+    clearInterval(tripBuddyCompanionInterval);
+    tripBuddyCompanionInterval = null;
+  }
+
+  tripBuddyCompanionStartAt = null;
+  showScreen("mateProfile");
+}
+
+function tripBuddyInitMatePrototype() {
+  tripBuddyRenderMateList();
+
+  const backToMateList = document.getElementById("backToMateList");
+  const goChatBtn = document.getElementById("goChatBtn");
+  const backToMateProfileFromChat = document.getElementById(
+    "backToMateProfileFromChat"
+  );
+  const sendChatBtn = document.getElementById("sendChatBtn");
+  const chatInput = document.getElementById("chatInput");
+  const startCompanionFromChatBtn = document.getElementById(
+    "startCompanionFromChatBtn"
+  );
+  const endCompanionBtn = document.getElementById("endCompanionBtn");
+
+  if (backToMateList) {
+    backToMateList.addEventListener("click", () => showScreen("mate"));
+  }
+
+  if (goChatBtn) {
+    goChatBtn.addEventListener("click", tripBuddyOpenChat);
+  }
+
+  if (backToMateProfileFromChat) {
+    backToMateProfileFromChat.addEventListener("click", () =>
+      showScreen("mateProfile")
+    );
+  }
+
+  if (sendChatBtn) {
+    sendChatBtn.addEventListener("click", tripBuddySendChatMessage);
+  }
+
+  if (chatInput) {
+    chatInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        tripBuddySendChatMessage();
+      }
+    });
+  }
+
+  if (startCompanionFromChatBtn) {
+    startCompanionFromChatBtn.addEventListener("click", tripBuddyOpenCompanion);
+  }
+
+  if (endCompanionBtn) {
+    endCompanionBtn.addEventListener("click", tripBuddyEndCompanion);
+  }
+
+  window.tripBuddyOpenMateProfile = tripBuddyOpenMateProfile;
+}
+
+tripBuddyInitMatePrototype();
