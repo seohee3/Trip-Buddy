@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTravelData } from '@/src/context/TravelDataContext';
+import { getRecordRegionName } from '@/src/utils/travel';
 
 export default function RecordDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -48,7 +49,7 @@ export default function RecordDetailScreen() {
         <View style={styles.detailCard}>
           <Text style={styles.title}>{record.title || '여행 제목'}</Text>
           <Text style={styles.date}>{record.date}</Text>
-          <Text style={styles.region}>{record.region}</Text>
+          <Text style={styles.region}>{getRecordRegionName(record)}</Text>
           <View style={styles.detailInfo}><Text style={styles.detailLabel}>기록</Text><Text style={styles.contentText}>{record.content || '작성된 내용이 없습니다.'}</Text></View>
           <Text style={styles.visibility}>{record.isPublic ? '현재 공개' : '나만 보기'}</Text>
         </View>

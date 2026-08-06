@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { findRegionSelection, getFullRegionName } from '@/src/data/regions';
 import type { FavoritePlace, TravelRecord, UserProfile } from '@/src/types/travel';
 
 const PROFILE_KEY = '@trip-buddy/profile';
@@ -15,7 +16,12 @@ export const DEFAULT_PROFILE: UserProfile = {
 export const DEFAULT_RECORDS: TravelRecord[] = [
   {
     id: 'seed-gyeonggi',
-    region: '경기도',
+    region: '경기도 수원시',
+    areaCode: '31',
+    areaName: '경기도',
+    sigunguCode: '31-001',
+    sigunguName: '수원시',
+    fullRegionName: '경기도 수원시',
     date: '2026.07.09 ~ 2026.07.10',
     startDate: '2026-07-09',
     endDate: '2026-07-10',
@@ -29,7 +35,12 @@ export const DEFAULT_RECORDS: TravelRecord[] = [
   },
   {
     id: 'seed-jeju',
-    region: '제주특별자치도',
+    region: '제주특별자치도 제주시',
+    areaCode: '39',
+    areaName: '제주특별자치도',
+    sigunguCode: '39-001',
+    sigunguName: '제주시',
+    fullRegionName: '제주특별자치도 제주시',
     date: '2026.06.27 ~ 2026.06.30',
     startDate: '2026-06-27',
     endDate: '2026-06-30',
@@ -59,6 +70,50 @@ function parseJson<T>(value: string | null, fallback: T): T {
   }
 }
 
+type LegacyTravelRecord = Partial<TravelRecord> & {
+  region?: string;
+};
+
+/** 기존 area 단위 기록을 공통 지역 모델로 보완합니다. 알 수 없는 문자열도 원문을 보존합니다. */
+export function migrateTravelRecord(value: unknown, index: number): TravelRecord | null {
+  if (!value || typeof value !== 'object') return null;
+
+  const raw = value as LegacyTravelRecord;
+  const legacyRegion = raw.fullRegionName ?? raw.region ?? raw.areaName ?? '';
+  const selection = findRegionSelection(legacyRegion);
+  const areaCode = raw.areaCode ?? selection?.area.code ?? '';
+  const areaName = raw.areaName ?? selection?.area.name ?? legacyRegion;
+  const sigungu = selection?.sigungu;
+  const sigunguCode = raw.sigunguCode ?? sigungu?.code ?? '';
+  const sigunguName = raw.sigunguName ?? sigungu?.name ?? '';
+  const fullRegionName = raw.fullRegionName ?? getFullRegionName(areaName, sigunguName) ?? legacyRegion;
+
+  if (!raw.id && !raw.title) return null;
+
+  return {
+    id: raw.id ?? `migrated-record-${index}`,
+    region: fullRegionName,
+    areaCode,
+    areaName,
+    sigunguCode,
+    sigunguName,
+    fullRegionName,
+    date: raw.date ?? '',
+    startDate: raw.startDate ?? '',
+    endDate: raw.endDate ?? raw.startDate ?? '',
+    title: raw.title ?? '여행 기록',
+    content: raw.content ?? '',
+    images: Array.isArray(raw.images) ? raw.images.filter((image): image is string => typeof image === 'string') : [],
+    isPublic: raw.isPublic ?? true,
+    createdAt: raw.createdAt ?? new Date(0).toISOString(),
+  };
+}
+
+export function migrateTravelRecords(value: unknown): TravelRecord[] {
+  if (!Array.isArray(value)) return DEFAULT_RECORDS;
+  return value.map(migrateTravelRecord).filter((record): record is TravelRecord => record !== null);
+}
+
 export async function loadTravelData(): Promise<StoredData> {
   const storedValues = await AsyncStorage.multiGet([
     PROFILE_KEY,
@@ -79,12 +134,15 @@ export async function loadTravelData(): Promise<StoredData> {
   const favoritesValue = storedData[FAVORITES_KEY] ?? null;
 
   const profile = parseJson(profileValue, DEFAULT_PROFILE);
-  const records = parseJson(recordsValue, DEFAULT_RECORDS);
+  const storedRecords = parseJson<unknown>(recordsValue, DEFAULT_RECORDS);
+  const records = migrateTravelRecords(storedRecords);
   const favorites = parseJson(favoritesValue, [] as FavoritePlace[]);
 
   const writes: Promise<void>[] = [];
   if (!profileValue) writes.push(AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile)));
-  if (!recordsValue) writes.push(AsyncStorage.setItem(RECORDS_KEY, JSON.stringify(records)));
+  if (!recordsValue || JSON.stringify(records) !== JSON.stringify(storedRecords)) {
+    writes.push(AsyncStorage.setItem(RECORDS_KEY, JSON.stringify(records)));
+  }
   if (!favoritesValue) writes.push(AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites)));
   await Promise.all(writes);
 

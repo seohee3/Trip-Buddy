@@ -4,13 +4,17 @@ import { useEffect, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTravelData } from '@/src/context/TravelDataContext';
-import { createRecordId, displayDate, RECORD_REGION_OPTIONS } from '@/src/utils/travel';
+import { getFullRegionName, REGIONS } from '@/src/data/regions';
+import { createRecordId, displayDate } from '@/src/utils/travel';
 import type { TravelRecord } from '@/src/types/travel';
+
+const INITIAL_AREA = REGIONS.find((area) => area.code === '31') ?? REGIONS[0];
 
 export default function CreateRecordScreen() {
   const { addRecord, isLoading } = useTravelData();
   const params = useLocalSearchParams<{ startDate?: string; endDate?: string }>();
-  const [region, setRegion] = useState(RECORD_REGION_OPTIONS[0]);
+  const [selectedArea, setSelectedArea] = useState(INITIAL_AREA);
+  const [selectedSigungu, setSelectedSigungu] = useState(INITIAL_AREA.sigungus[0]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isPublic, setIsPublic] = useState(true);
@@ -57,9 +61,20 @@ export default function CreateRecordScreen() {
     }
 
     const finalEndDate = endDate || startDate;
+    if (!selectedSigungu) {
+      Alert.alert('방문 시 / 구를 선택해주세요.');
+      return;
+    }
+
+    const fullRegionName = getFullRegionName(selectedArea.name, selectedSigungu.name);
     const record: TravelRecord = {
       id: createRecordId(),
-      region,
+      region: fullRegionName,
+      areaCode: selectedArea.code,
+      areaName: selectedArea.name,
+      sigunguCode: selectedSigungu.code,
+      sigunguName: selectedSigungu.name,
+      fullRegionName,
       startDate,
       endDate: finalEndDate,
       date: `${displayDate(startDate)} ~ ${displayDate(finalEndDate)}`,
@@ -92,10 +107,16 @@ export default function CreateRecordScreen() {
           <Pressable onPress={save} disabled={isSaving}><Text style={styles.done}>{isSaving ? '저장 중' : '완료'}</Text></Pressable>
         </View>
 
-        <Text style={styles.label}>방문 지역</Text>
+        <Text style={styles.label}>도 / 광역시</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.regionList}>
-          {RECORD_REGION_OPTIONS.map((option) => <Pressable key={option} style={[styles.regionChip, option === region && styles.selectedChip]} onPress={() => setRegion(option)}><Text style={[styles.regionChipText, option === region && styles.selectedChipText]}>{option}</Text></Pressable>)}
+          {REGIONS.map((area) => <Pressable key={area.code} style={[styles.regionChip, area.code === selectedArea.code && styles.selectedChip]} onPress={() => { setSelectedArea(area); setSelectedSigungu(area.sigungus[0]); }}><Text style={[styles.regionChipText, area.code === selectedArea.code && styles.selectedChipText]}>{area.name}</Text></Pressable>)}
         </ScrollView>
+
+        <Text style={styles.label}>시 / 구</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.regionList}>
+          {selectedArea.sigungus.map((sigungu) => <Pressable key={sigungu.code} style={[styles.subRegionChip, sigungu.code === selectedSigungu?.code && styles.selectedSubRegionChip]} onPress={() => setSelectedSigungu(sigungu)}><Text style={[styles.regionChipText, sigungu.code === selectedSigungu?.code && styles.selectedChipText]}>{sigungu.name}</Text></Pressable>)}
+        </ScrollView>
+        <Text style={styles.selectedRegionHint}>{selectedArea.name} {selectedSigungu?.name}</Text>
 
         <Text style={styles.label}>방문 일정</Text>
         <Pressable style={styles.dateButton} onPress={openCalendar}>
@@ -134,9 +155,12 @@ const styles = StyleSheet.create({
   label: { marginTop: 18, marginBottom: 8, color: '#222222', fontSize: 14, fontWeight: '700' },
   regionList: { gap: 8, paddingVertical: 2 },
   regionChip: { paddingVertical: 9, paddingHorizontal: 13, borderRadius: 18, backgroundColor: '#F1EEFC' },
+  subRegionChip: { paddingVertical: 9, paddingHorizontal: 13, borderRadius: 18, backgroundColor: '#F4F4F7' },
+  selectedSubRegionChip: { backgroundColor: '#8B7BFF' },
   selectedChip: { backgroundColor: '#5C3DFF' },
   regionChipText: { color: '#777777', fontSize: 12 },
   selectedChipText: { color: '#FFFFFF', fontWeight: '700' },
+  selectedRegionHint: { marginTop: 7, color: '#5C3DFF', fontSize: 12, fontWeight: '700' },
   dateButton: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 13, borderRadius: 14, backgroundColor: '#F1EEFC' },
   dateValue: { color: '#5C3DFF', fontSize: 13, fontWeight: '700' },
   datePlaceholder: { color: '#777777', fontSize: 13 },

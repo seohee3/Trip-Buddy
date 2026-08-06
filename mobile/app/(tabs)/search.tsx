@@ -14,13 +14,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { REGIONS, type RegionArea } from '@/src/data/regions';
 
 type CategoryCode = '' | '12' | '14' | '39';
-
-type Area = {
-  code: string;
-  name: string;
-};
 
 type Place = {
   id: number;
@@ -44,92 +40,6 @@ const COLORS = {
   border: '#EEEEEE',
   background: '#FFFFFF',
   modalOverlay: 'rgba(0, 0, 0, 0.18)',
-};
-
-const AREA_LIST: Area[] = [
-  { code: '1', name: '서울특별시' },
-  { code: '2', name: '인천광역시' },
-  { code: '3', name: '대전광역시' },
-  { code: '4', name: '대구광역시' },
-  { code: '5', name: '광주광역시' },
-  { code: '6', name: '부산광역시' },
-  { code: '7', name: '울산광역시' },
-  { code: '8', name: '세종특별자치시' },
-  { code: '31', name: '경기도' },
-  { code: '32', name: '강원특별자치도' },
-  { code: '33', name: '충청북도' },
-  { code: '34', name: '충청남도' },
-  { code: '35', name: '경상북도' },
-  { code: '36', name: '경상남도' },
-  { code: '37', name: '전북특별자치도' },
-  { code: '38', name: '전라남도' },
-  { code: '39', name: '제주특별자치도' },
-];
-
-const SIGUNGU_LIST: Record<string, string[]> = {
-  '1': [
-    '전체',
-    '강남구',
-    '강동구',
-    '강북구',
-    '강서구',
-    '관악구',
-    '광진구',
-    '구로구',
-    '금천구',
-    '노원구',
-    '도봉구',
-    '동대문구',
-    '동작구',
-    '마포구',
-    '서대문구',
-    '서초구',
-    '성동구',
-    '성북구',
-    '송파구',
-    '양천구',
-    '영등포구',
-    '용산구',
-    '은평구',
-    '종로구',
-    '중구',
-    '중랑구',
-  ],
-  '31': [
-    '전체',
-    '가평군',
-    '고양시',
-    '과천시',
-    '광명시',
-    '광주시',
-    '구리시',
-    '군포시',
-    '김포시',
-    '남양주시',
-    '동두천시',
-    '부천시',
-    '성남시',
-    '수원시',
-    '시흥시',
-    '안산시',
-    '안성시',
-    '안양시',
-    '양주시',
-    '양평군',
-    '여주시',
-    '연천군',
-    '오산시',
-    '용인시',
-    '의왕시',
-    '의정부시',
-    '이천시',
-    '파주시',
-    '평택시',
-    '포천시',
-    '하남시',
-    '화성시',
-  ],
-  '39': ['전체', '서귀포시', '제주시'],
 };
 
 const CATEGORY_LIST: {
@@ -271,10 +181,10 @@ export default function SearchScreen() {
   const [selectedCategory, setSelectedCategory] =
     useState<CategoryCode>('');
 
-  const [selectedArea, setSelectedArea] = useState<Area>(AREA_LIST[0]);
+  const [selectedArea, setSelectedArea] = useState<RegionArea>(REGIONS[0]);
   const [selectedSigungu, setSelectedSigungu] = useState('전체');
 
-  const [tempArea, setTempArea] = useState<Area>(AREA_LIST[0]);
+  const [tempArea, setTempArea] = useState<RegionArea>(REGIONS[0]);
   const [tempSigungu, setTempSigungu] = useState('전체');
 
   const [regionModalVisible, setRegionModalVisible] = useState(false);
@@ -282,8 +192,7 @@ export default function SearchScreen() {
     'area' | 'sigungu' | null
   >(null);
 
-  const sigunguOptions =
-    SIGUNGU_LIST[tempArea.code] ?? ['전체'];
+  const sigunguOptions = ['전체', ...tempArea.sigungus.map((sigungu) => sigungu.name)];
 
   const visiblePlaces = useMemo(() => {
     const normalizedKeyword = appliedKeyword.trim().toLowerCase();
@@ -483,7 +392,7 @@ export default function SearchScreen() {
                 style={styles.dropdownList}
                 nestedScrollEnabled
               >
-                {AREA_LIST.map((area) => {
+                {REGIONS.map((area) => {
                   const isSelected = tempArea.code === area.code;
 
                   return (

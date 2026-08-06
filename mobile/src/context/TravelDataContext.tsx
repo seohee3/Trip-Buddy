@@ -8,6 +8,7 @@ import {
   persistFavorites,
   persistProfile,
   persistRecords,
+  migrateTravelRecord,
 } from '@/src/storage/travelStorage';
 
 type TravelDataContextValue = {
@@ -79,7 +80,8 @@ export function TravelDataProvider({ children }: PropsWithChildren) {
         }
       },
       addRecord: async (record) => {
-        const nextRecords = [record, ...records];
+        const normalizedRecord = migrateTravelRecord(record, 0) ?? record;
+        const nextRecords = [normalizedRecord, ...records];
         try {
           await persistRecords(nextRecords);
           setRecords(nextRecords);

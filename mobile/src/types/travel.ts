@@ -6,7 +6,13 @@ export type UserProfile = {
 
 export type TravelRecord = {
   id: string;
+  /** @deprecated Use fullRegionName and the area/sigungu fields instead. */
   region: string;
+  areaCode: string;
+  areaName: string;
+  sigunguCode: string;
+  sigunguName: string;
+  fullRegionName: string;
   date: string;
   startDate: string;
   endDate: string;
@@ -25,8 +31,9 @@ export type FavoritePlace = {
 };
 
 export type Mascot = {
-  region: string;
-  shortName: string;
-  icon: string;
-  name: string;
+  id: string;
+  regionName: string;
+  mascotName: string;
+  concept: string;
+  image: string;
 };
