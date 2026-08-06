@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { TravelDataProvider } from '@/src/context/TravelDataContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -14,10 +15,18 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
+      <TravelDataProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="profile-edit" />
+          <Stack.Screen name="record/create" />
+          <Stack.Screen name="record/calendar" />
+          <Stack.Screen name="record/[id]" />
+          <Stack.Screen name="travel-map" />
+          <Stack.Screen name="mascot-book" />
+          <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: true, title: 'Modal' }} />
+        </Stack>
+      </TravelDataProvider>
       <StatusBar style="auto" />
     </ThemeProvider>
   );
