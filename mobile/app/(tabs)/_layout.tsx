@@ -2,8 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-const ACTIVE_COLOR = '#7B61FF';
-const INACTIVE_COLOR = '#9CA3AF';
+const ACTIVE_COLOR = '#5C3DFF';
+const INACTIVE_COLOR = '#8E8E93';
 
 export default function TabLayout() {
   return (
@@ -12,47 +12,18 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: ACTIVE_COLOR,
         tabBarInactiveTintColor: INACTIVE_COLOR,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          height: 82,
-          paddingTop: 8,
-          paddingBottom: 18,
           backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5E7EB',
+          borderTopColor: '#EEEEEE',
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+          fontSize: 11,
+          fontWeight: '500',
         },
       }}
     >
-      <Tabs.Screen
-        name="record"
-        options={{
-          title: '기록',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'document-text' : 'document-text-outline'}
-              size={24}
-              color={color}
-            />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="map"
-        options={{
-          title: '지도',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'map' : 'map-outline'}
-              size={24}
-              color={color}
-            />
-          ),
-        }}
-      />
-
       <Tabs.Screen
         name="index"
         options={{
@@ -60,7 +31,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'home' : 'home-outline'}
-              size={26}
+              size={22}
               color={color}
             />
           ),
@@ -68,13 +39,41 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="explore"
+        name="search"
         options={{
-          title: '탐색',
+          title: '검색',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'search' : 'search-outline'}
-              size={24}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="nearby"
+        options={{
+          title: '주변',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'location' : 'location-outline'}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="mate"
+        options={{
+          title: '메이트',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'people' : 'people-outline'}
+              size={22}
               color={color}
             />
           ),
@@ -84,11 +83,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="my"
         options={{
-          title: '마이',
+          title: 'MY',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'person' : 'person-outline'}
-              size={24}
+              size={22}
               color={color}
             />
           ),
