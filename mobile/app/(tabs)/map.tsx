@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function ExploreScreen() {
+export default function MapScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>관광지 탐색</Text>
+      <Text style={styles.title}>여행 지도</Text>
       <Text style={styles.description}>
-        관광지 검색과 지역별 관광지가 표시될 예정입니다.
+        방문 지역과 여행 지도가 표시될 예정입니다.
       </Text>
     </View>
   );

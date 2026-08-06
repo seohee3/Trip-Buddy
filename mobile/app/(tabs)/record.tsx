@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function ExploreScreen() {
+export default function RecordScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>관광지 탐색</Text>
+      <Text style={styles.title}>여행 기록</Text>
       <Text style={styles.description}>
-        관광지 검색과 지역별 관광지가 표시될 예정입니다.
+        여행 기록 작성 화면이 들어갈 예정입니다.
       </Text>
     </View>
   );
