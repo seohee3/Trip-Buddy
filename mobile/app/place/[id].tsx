@@ -1,6 +1,13 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import {
+  addFavoritePlace,
+  isFavoritePlace,
+  removeFavoritePlace,
+} from '../../src/storage/favoritePlaces';
 
 const COLORS = {
   primary: '#5C3DFF',
@@ -25,6 +32,7 @@ export default function PlaceDetailScreen() {
     distance?: string;
   }>();
 
+  const id = String(params.id ?? '');
   const title = params.title ?? '관광지';
   const areaName = params.areaName ?? '지역';
   const sigunguName = params.sigunguName ?? '구/군';
@@ -35,6 +43,52 @@ export default function PlaceDetailScreen() {
     'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80';
   const rating = params.rating ?? '4.8';
   const distance = params.distance ?? '1.5';
+
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    isFavoritePlace(id)
+      .then(setIsFavorite)
+      .catch(() => setIsFavorite(false));
+  }, [id]);
+
+  const toggleFavorite = async () => {
+    if (!id) {
+      Alert.alert('오류', '장소 정보를 찾을 수 없어요.');
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        await removeFavoritePlace(id);
+        setIsFavorite(false);
+        Alert.alert('찜 해제', '찜한 장소에서 삭제했어요.');
+        return;
+      }
+
+      await addFavoritePlace({
+        id,
+        title,
+        areaName,
+        sigunguName,
+        address,
+        category,
+        image,
+        rating,
+        distance,
+      });
+
+      setIsFavorite(true);
+      Alert.alert('찜 완료', '찜한 장소에 저장했어요.');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('오류', '찜하기 저장 중 문제가 발생했어요.');
+    }
+  };
 
   const goRecord = () => {
     router.push({
@@ -93,8 +147,13 @@ export default function PlaceDetailScreen() {
           </View>
 
           <View style={styles.actionRow}>
-            <Pressable style={styles.subButton}>
-              <Text style={styles.subButtonText}>찜하기</Text>
+            <Pressable
+              style={[styles.subButton, isFavorite && styles.favoriteButton]}
+              onPress={toggleFavorite}
+            >
+              <Text style={[styles.subButtonText, isFavorite && styles.favoriteButtonText]}>
+                {isFavorite ? '찜 해제' : '찜하기'}
+              </Text>
             </Pressable>
 
             <Pressable style={styles.mainButton} onPress={goRecord}>
@@ -226,6 +285,12 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 15,
     fontWeight: '900',
+  },
+  favoriteButton: {
+    backgroundColor: COLORS.lightPurple,
+  },
+  favoriteButtonText: {
+    color: COLORS.primary,
   },
   mainButton: {
     flex: 1.4,
