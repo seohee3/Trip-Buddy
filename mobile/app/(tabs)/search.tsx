@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   Keyboard,
   Pressable,
@@ -14,19 +15,11 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { searchTourPlaces, type TourPlace } from '../../src/api/tourApi';
+
 type CategoryCode = '' | '12' | '14' | '15' | '39';
 
-type Place = {
-  id: number;
-  title: string;
-  areaName: string;
-  sigunguName: string;
-  address: string;
-  contentTypeId: CategoryCode;
-  image: string;
-  rating: number;
-  distance: number;
-};
+type Place = TourPlace;
 
 const COLORS = {
   primary: '#5C3DFF',
@@ -49,7 +42,7 @@ const CATEGORY_LIST: { code: CategoryCode; label: string }[] = [
 
 const SAMPLE_PLACES: Place[] = [
   {
-    id: 1,
+    id: '1',
     title: '서호',
     areaName: '항저우',
     sigunguName: '시후구',
@@ -61,7 +54,7 @@ const SAMPLE_PLACES: Place[] = [
     distance: 2.1,
   },
   {
-    id: 2,
+    id: '2',
     title: '허팡제 거리',
     areaName: '항저우',
     sigunguName: '상청구',
@@ -73,7 +66,7 @@ const SAMPLE_PLACES: Place[] = [
     distance: 3.5,
   },
   {
-    id: 3,
+    id: '3',
     title: '우린 야시장',
     areaName: '항저우',
     sigunguName: '궁수구',
@@ -85,7 +78,7 @@ const SAMPLE_PLACES: Place[] = [
     distance: 4.2,
   },
   {
-    id: 4,
+    id: '4',
     title: '칭산호',
     areaName: '항저우',
     sigunguName: '린안구',
@@ -97,7 +90,7 @@ const SAMPLE_PLACES: Place[] = [
     distance: 7.4,
   },
   {
-    id: 5,
+    id: '5',
     title: '항저우 박물관',
     areaName: '항저우',
     sigunguName: '상청구',
@@ -109,7 +102,7 @@ const SAMPLE_PLACES: Place[] = [
     distance: 2.8,
   },
   {
-    id: 6,
+    id: '6',
     title: '서호 음악분수',
     areaName: '항저우',
     sigunguName: '시후구',
@@ -121,7 +114,7 @@ const SAMPLE_PLACES: Place[] = [
     distance: 2.6,
   },
   {
-    id: 7,
+    id: '7',
     title: '광교호수공원',
     areaName: '경기도',
     sigunguName: '수원시',
@@ -133,7 +126,7 @@ const SAMPLE_PLACES: Place[] = [
     distance: 1.7,
   },
   {
-    id: 8,
+    id: '8',
     title: '수원화성',
     areaName: '경기도',
     sigunguName: '수원시',
@@ -145,7 +138,7 @@ const SAMPLE_PLACES: Place[] = [
     distance: 2.3,
   },
   {
-    id: 9,
+    id: '9',
     title: '성산일출봉',
     areaName: '제주도',
     sigunguName: '서귀포시',
@@ -157,7 +150,7 @@ const SAMPLE_PLACES: Place[] = [
     distance: 5.2,
   },
   {
-    id: 10,
+    id: '10',
     title: '제주 향토음식점',
     areaName: '제주도',
     sigunguName: '제주시',
@@ -170,7 +163,7 @@ const SAMPLE_PLACES: Place[] = [
   },
 ];
 
-function getCategoryLabel(code: CategoryCode) {
+function getCategoryLabel(code: string) {
   return CATEGORY_LIST.find((category) => category.code === code)?.label ?? '관광지';
 }
 
@@ -179,10 +172,14 @@ export default function SearchScreen() {
   const [appliedKeyword, setAppliedKeyword] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryCode>('');
 
+  const [places, setPlaces] = useState<Place[]>(SAMPLE_PLACES);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   const visiblePlaces = useMemo(() => {
     const keyword = appliedKeyword.trim().toLowerCase();
 
-    return SAMPLE_PLACES.filter((place) => {
+    return places.filter((place) => {
       const matchesCategory =
         selectedCategory === '' || place.contentTypeId === selectedCategory;
 
@@ -195,12 +192,44 @@ export default function SearchScreen() {
 
       return matchesCategory && matchesKeyword;
     });
-  }, [appliedKeyword, selectedCategory]);
+  }, [appliedKeyword, selectedCategory, places]);
+
+  const loadTourPlaces = async (keyword: string) => {
+    const trimmedKeyword = keyword.trim();
+
+    if (!trimmedKeyword) {
+      setPlaces(SAMPLE_PLACES);
+      setAppliedKeyword('');
+      setErrorMessage('');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setErrorMessage('');
+
+      const result = await searchTourPlaces(trimmedKeyword);
+
+      setPlaces(result);
+      setAppliedKeyword(trimmedKeyword);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage('관광공사 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      setPlaces([]);
+      setAppliedKeyword(trimmedKeyword);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const submitSearch = () => {
     Keyboard.dismiss();
-    setAppliedKeyword(searchInput.trim());
+    loadTourPlaces(searchInput);
   };
+
+  useEffect(() => {
+    loadTourPlaces('항저우');
+  }, []);
 
   const openPlaceDetail = (place: Place) => {
     router.push({
@@ -294,7 +323,19 @@ export default function SearchScreen() {
           <Text style={styles.resultCount}>{visiblePlaces.length}곳</Text>
         </View>
 
-        {visiblePlaces.length === 0 ? (
+        {isLoading ? (
+          <View style={styles.emptyBox}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.emptyTitle}>관광 정보를 불러오는 중입니다</Text>
+            <Text style={styles.emptyText}>잠시만 기다려주세요.</Text>
+          </View>
+        ) : errorMessage ? (
+          <View style={styles.emptyBox}>
+            <Ionicons name="alert-circle-outline" size={34} color="#B5AECF" />
+            <Text style={styles.emptyTitle}>검색에 실패했습니다</Text>
+            <Text style={styles.emptyText}>{errorMessage}</Text>
+          </View>
+        ) : visiblePlaces.length === 0 ? (
           <View style={styles.emptyBox}>
             <Ionicons name="search-outline" size={34} color="#B5AECF" />
             <Text style={styles.emptyTitle}>검색 결과가 없습니다</Text>
@@ -615,6 +656,7 @@ const styles = StyleSheet.create({
     color: COLORS.secondaryText,
     fontSize: 13,
     textAlign: 'center',
+    lineHeight: 19,
   },
   pressedCard: {
     opacity: 0.75,
