@@ -1,0 +1,38 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTravelData } from '@/src/context/TravelDataContext';
+import { MASCOTS } from '@/src/data/mascots';
+import { getRecordRegionName, getVisitedRegions } from '@/src/utils/travel';
+
+export default function HomeScreen() {
+  const { profile, records, isLoading } = useTravelData();
+  const visitedRegions = getVisitedRegions(records);
+  const mascotCount = MASCOTS.filter((mascot) => visitedRegions.includes(mascot.regionName)).length;
+
+  if (isLoading) return <View style={styles.loading}><Text style={styles.loadingText}>여행 데이터를 불러오는 중입니다.</Text></View>;
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <StatusBar style="dark" />
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}><View><Text style={styles.brand}>Travel Mate</Text><Text style={styles.greeting}>{records.length > 0 ? '최근 여행 기록을 확인해보세요' : '나만의 여행을 기록해보세요'}</Text></View><View style={styles.headerIcons}><Pressable style={styles.circleButton} onPress={() => undefined}><Ionicons name="notifications" size={16} color="#5C3DFF" /></Pressable><Pressable style={styles.circleButton} onPress={() => undefined}><Ionicons name="airplane" size={16} color="#5C3DFF" /></Pressable></View></View>
+        <Pressable style={styles.profileCard} onPress={() => router.push('/(tabs)/my')}><Image source={{ uri: profile.image }} style={styles.profileImage} /><View style={styles.profileText}><Text style={styles.profileName}>{profile.name}</Text><Text style={styles.profileBio}>{profile.bio}</Text></View></Pressable>
+
+        <View style={styles.section}><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>최근 여행 기록</Text><Pressable onPress={() => router.push('/(tabs)/my')}><Text style={styles.viewAll}>전체보기</Text></Pressable></View>{records.length === 0 ? <Text style={styles.emptyText}>아직 여행 기록이 없습니다.</Text> : <View style={styles.recordList}>{records.slice(0, 3).map((record) => <Pressable key={record.id} style={({ pressed }) => [styles.recordCard, pressed && styles.pressed]} onPress={() => router.push({ pathname: '/record/[id]', params: { id: record.id } })}><View style={styles.recordHeader}><View style={styles.recordIcon}><Text style={styles.recordIconText}>🌿</Text></View><View style={styles.recordTitleBox}><Text style={styles.recordTitle}>{record.title}</Text><Text style={styles.recordMeta}>{getRecordRegionName(record)} · {record.date}</Text></View></View>{record.images[0] ? <Image source={{ uri: record.images[0] }} style={styles.recordImage} resizeMode="cover" /> : <View style={[styles.recordImage, styles.noImage]}><Text style={styles.noImageText}>이미지 없음</Text></View>}<Text style={styles.recordContent}>{record.content || '작성된 내용이 없습니다.'}</Text></Pressable>)}</View>}</View>
+
+        <View style={styles.section}><Text style={styles.sectionTitle}>나의 여행 현황</Text><View style={styles.statusCard}><StatusItem value={records.length} label="기록" /><StatusItem value={visitedRegions.length} label="방문 지역" /><StatusItem value={mascotCount} label="마스코트" /></View></View>
+        <View style={styles.section}><Text style={styles.sectionTitle}>추천 바로가기</Text><View style={styles.shortcutList}><ShortcutButton icon="location" label="주변 관광지 둘러보기" onPress={() => router.push('/(tabs)/nearby')} /><ShortcutButton icon="create" label="여행 기록 남기기" onPress={() => router.push('/record/create')} /><ShortcutButton icon="map" label="나의 여행 지도 보기" onPress={() => router.push('/travel-map')} /><ShortcutButton icon="bag-handle" label="마스코트 도감 보기" onPress={() => router.push('/mascot-book')} /></View></View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function StatusItem({ value, label }: { value: number; label: string }) { return <View style={styles.statusItem}><Text style={styles.statusNumber}>{value}</Text><Text style={styles.statusLabel}>{label}</Text></View>; }
+function ShortcutButton({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) { return <Pressable style={({ pressed }) => [styles.shortcutButton, pressed && styles.pressed]} onPress={onPress}><Ionicons name={icon} size={17} color="#5C3DFF" /><Text style={styles.shortcutText}>{label}</Text></Pressable>; }
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#FFFFFF' }, container: { flex: 1, backgroundColor: '#FFFFFF' }, content: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 36 }, header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, brand: { color: '#5C3DFF', fontSize: 27, fontWeight: '800' }, greeting: { marginTop: 4, color: '#777777', fontSize: 13 }, headerIcons: { flexDirection: 'row', gap: 8 }, circleButton: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center', borderRadius: 17, backgroundColor: '#F1EEFC' }, profileCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20, padding: 14, borderWidth: 1, borderColor: '#EEEEEE', borderRadius: 18, backgroundColor: '#FAFAFA' }, profileImage: { width: 54, height: 54, borderRadius: 27, backgroundColor: '#F1EEFC' }, profileText: { flex: 1 }, profileName: { color: '#222222', fontSize: 15, fontWeight: '700' }, profileBio: { marginTop: 5, color: '#777777', fontSize: 12 }, section: { marginTop: 24 }, sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }, sectionTitle: { marginBottom: 12, color: '#222222', fontSize: 17, fontWeight: '700' }, viewAll: { marginBottom: 12, color: '#5C3DFF', fontSize: 13, fontWeight: '700' }, recordList: { gap: 16 }, recordCard: { padding: 12, borderWidth: 1, borderColor: '#EEEEEE', borderRadius: 18, backgroundColor: '#FFFFFF', shadowColor: '#000000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 }, recordHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }, recordIcon: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center', borderRadius: 17, backgroundColor: '#F1EEFC' }, recordIconText: { fontSize: 17 }, recordTitleBox: { flex: 1 }, recordTitle: { color: '#222222', fontSize: 14, fontWeight: '700' }, recordMeta: { marginTop: 3, color: '#777777', fontSize: 10 }, recordImage: { width: '100%', height: 175, marginBottom: 10, borderRadius: 16, backgroundColor: '#F1EEFC' }, recordContent: { color: '#555555', fontSize: 13, lineHeight: 19 }, statusCard: { flexDirection: 'row', paddingVertical: 16, paddingHorizontal: 8, borderRadius: 18, backgroundColor: '#F7F4FF' }, statusItem: { flex: 1, alignItems: 'center' }, statusNumber: { color: '#5C3DFF', fontSize: 22, fontWeight: '700' }, statusLabel: { marginTop: 2, color: '#777777', fontSize: 12 }, shortcutList: { gap: 10 }, shortcutButton: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 15, borderRadius: 16, backgroundColor: '#F1EEFC' }, shortcutText: { color: '#5C3DFF', fontSize: 14, fontWeight: '700' }, pressed: { opacity: 0.7 }, emptyText: { paddingVertical: 18, color: '#777777', fontSize: 13, textAlign: 'center' }, noImage: { alignItems: 'center', justifyContent: 'center' }, noImageText: { color: '#999999', fontSize: 12 }, loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }, loadingText: { color: '#777777', fontSize: 14 },
+});
