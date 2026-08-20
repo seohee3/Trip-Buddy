@@ -1,11 +1,7 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
 import {
-  Alert,
   Image,
   Keyboard,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,10 +9,12 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { REGIONS, type RegionArea } from '@/src/data/regions';
 
-type CategoryCode = '' | '12' | '14' | '39';
+type CategoryCode = '' | '12' | '14' | '15' | '39';
 
 type Place = {
   id: number;
@@ -24,7 +22,7 @@ type Place = {
   areaName: string;
   sigunguName: string;
   address: string;
-  contentTypeId: Exclude<CategoryCode, ''>;
+  contentTypeId: CategoryCode;
   image: string;
   rating: number;
   distance: number;
@@ -32,98 +30,95 @@ type Place = {
 
 const COLORS = {
   primary: '#5C3DFF',
-  primaryDark: '#6D4CFF',
-  primaryLight: '#F1EEFC',
-  primarySelected: '#EDE7FF',
+  primaryDark: '#4327D9',
+  primaryLight: '#F1EDFF',
+  primarySelected: '#E5DEFF',
+  background: '#FFFFFF',
   text: '#222222',
   secondaryText: '#777777',
   border: '#EEEEEE',
-  background: '#FFFFFF',
-  modalOverlay: 'rgba(0, 0, 0, 0.18)',
 };
 
-const CATEGORY_LIST: {
-  code: CategoryCode;
-  label: string;
-}[] = [
+const CATEGORY_LIST: { code: CategoryCode; label: string }[] = [
   { code: '', label: '전체' },
-  { code: '12', label: '자연' },
-  { code: '14', label: '문화·역사' },
+  { code: '12', label: '관광지' },
+  { code: '14', label: '문화시설' },
+  { code: '15', label: '축제/행사' },
   { code: '39', label: '맛집' },
 ];
 
 const SAMPLE_PLACES: Place[] = [
   {
     id: 1,
-    title: '롯데시티호텔 마포',
-    areaName: '서울특별시',
-    sigunguName: '마포구',
-    address: '서울특별시 마포구 마포대로 109',
-    contentTypeId: '14',
+    title: '서호',
+    areaName: '항저우',
+    sigunguName: '시후구',
+    address: '중국 저장성 항저우시 시후구',
+    contentTypeId: '12',
     image:
-      'https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=700&q=80',
-    rating: 4.7,
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=700&q=80',
+    rating: 4.9,
     distance: 2.1,
   },
   {
     id: 2,
-    title: '롯데시티호텔 명동',
-    areaName: '서울특별시',
-    sigunguName: '중구',
-    address: '서울특별시 중구 삼일대로 362',
+    title: '허팡제 거리',
+    areaName: '항저우',
+    sigunguName: '상청구',
+    address: '중국 저장성 항저우시 상청구 허팡제',
     contentTypeId: '14',
     image:
-      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=700&q=80',
-    rating: 4.8,
-    distance: 2.5,
+      'https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=700&q=80',
+    rating: 4.6,
+    distance: 3.5,
   },
   {
     id: 3,
-    title: '임피리얼 팰리스 부티크 호텔',
-    areaName: '서울특별시',
-    sigunguName: '용산구',
-    address: '서울특별시 용산구 이태원로 221',
-    contentTypeId: '14',
+    title: '우린 야시장',
+    areaName: '항저우',
+    sigunguName: '궁수구',
+    address: '중국 저장성 항저우시 우린광장 인근',
+    contentTypeId: '39',
     image:
-      'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=700&q=80',
-    rating: 4.6,
-    distance: 3.2,
+      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=700&q=80',
+    rating: 4.5,
+    distance: 4.2,
   },
   {
     id: 4,
-    title: '호텔 마누',
-    areaName: '서울특별시',
-    sigunguName: '중구',
-    address: '서울특별시 중구 퇴계로 19',
-    contentTypeId: '14',
+    title: '칭산호',
+    areaName: '항저우',
+    sigunguName: '린안구',
+    address: '중국 저장성 항저우시 린안구 칭산호',
+    contentTypeId: '12',
     image:
-      'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=700&q=80',
-    rating: 4.5,
-    distance: 3.4,
+      'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=700&q=80',
+    rating: 4.8,
+    distance: 7.4,
   },
   {
     id: 5,
-    title: '서울숲',
-    areaName: '서울특별시',
-    sigunguName: '성동구',
-    address: '서울특별시 성동구 뚝섬로 273',
-    contentTypeId: '12',
+    title: '항저우 박물관',
+    areaName: '항저우',
+    sigunguName: '상청구',
+    address: '중국 저장성 항저우시 박물관 거리',
+    contentTypeId: '14',
     image:
-      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=700&q=80',
-    rating: 4.9,
-    distance: 4.1,
+      'https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=700&q=80',
+    rating: 4.4,
+    distance: 2.8,
   },
   {
     id: 6,
-    title: '광장시장 맛집거리',
-    areaName: '서울특별시',
-    sigunguName: '종로구',
-    address: '서울특별시 종로구 창경궁로 88',
-    contentTypeId: '39',
+    title: '서호 음악분수',
+    areaName: '항저우',
+    sigunguName: '시후구',
+    address: '중국 저장성 항저우시 서호 인근',
+    contentTypeId: '15',
     image:
-      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=700&q=80',
+      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=700&q=80',
     rating: 4.7,
-    distance: 3.8,
+    distance: 2.6,
   },
   {
     id: 7,
@@ -133,7 +128,7 @@ const SAMPLE_PLACES: Place[] = [
     address: '경기도 수원시 영통구 광교호수로 165',
     contentTypeId: '12',
     image:
-      'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=700&q=80',
+      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=700&q=80',
     rating: 4.8,
     distance: 1.7,
   },
@@ -152,7 +147,7 @@ const SAMPLE_PLACES: Place[] = [
   {
     id: 9,
     title: '성산일출봉',
-    areaName: '제주특별자치도',
+    areaName: '제주도',
     sigunguName: '서귀포시',
     address: '제주특별자치도 서귀포시 성산읍',
     contentTypeId: '12',
@@ -164,7 +159,7 @@ const SAMPLE_PLACES: Place[] = [
   {
     id: 10,
     title: '제주 향토음식점',
-    areaName: '제주특별자치도',
+    areaName: '제주도',
     sigunguName: '제주시',
     address: '제주특별자치도 제주시 연동',
     contentTypeId: '39',
@@ -175,85 +170,54 @@ const SAMPLE_PLACES: Place[] = [
   },
 ];
 
+function getCategoryLabel(code: CategoryCode) {
+  return CATEGORY_LIST.find((category) => category.code === code)?.label ?? '관광지';
+}
+
 export default function SearchScreen() {
   const [searchInput, setSearchInput] = useState('');
   const [appliedKeyword, setAppliedKeyword] = useState('');
-  const [selectedCategory, setSelectedCategory] =
-    useState<CategoryCode>('');
-
-  const [selectedArea, setSelectedArea] = useState<RegionArea>(REGIONS[0]);
-  const [selectedSigungu, setSelectedSigungu] = useState('전체');
-
-  const [tempArea, setTempArea] = useState<RegionArea>(REGIONS[0]);
-  const [tempSigungu, setTempSigungu] = useState('전체');
-
-  const [regionModalVisible, setRegionModalVisible] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<
-    'area' | 'sigungu' | null
-  >(null);
-
-  const sigunguOptions = ['전체', ...tempArea.sigungus.map((sigungu) => sigungu.name)];
+  const [selectedCategory, setSelectedCategory] = useState<CategoryCode>('');
 
   const visiblePlaces = useMemo(() => {
-    const normalizedKeyword = appliedKeyword.trim().toLowerCase();
+    const keyword = appliedKeyword.trim().toLowerCase();
 
     return SAMPLE_PLACES.filter((place) => {
-      const matchesArea = place.areaName === selectedArea.name;
-
-      const matchesSigungu =
-        selectedSigungu === '전체' ||
-        place.sigunguName === selectedSigungu;
-
       const matchesCategory =
-        selectedCategory === '' ||
-        place.contentTypeId === selectedCategory;
+        selectedCategory === '' || place.contentTypeId === selectedCategory;
 
       const matchesKeyword =
-        normalizedKeyword.length === 0 ||
-        place.title.toLowerCase().includes(normalizedKeyword) ||
-        place.address.toLowerCase().includes(normalizedKeyword);
+        keyword.length === 0 ||
+        place.title.toLowerCase().includes(keyword) ||
+        place.areaName.toLowerCase().includes(keyword) ||
+        place.sigunguName.toLowerCase().includes(keyword) ||
+        place.address.toLowerCase().includes(keyword);
 
-      return (
-        matchesArea &&
-        matchesSigungu &&
-        matchesCategory &&
-        matchesKeyword
-      );
+      return matchesCategory && matchesKeyword;
     });
-  }, [
-    appliedKeyword,
-    selectedArea,
-    selectedCategory,
-    selectedSigungu,
-  ]);
-
-  const openRegionModal = () => {
-    setTempArea(selectedArea);
-    setTempSigungu(selectedSigungu);
-    setOpenDropdown(null);
-    setRegionModalVisible(true);
-  };
-
-  const closeRegionModal = () => {
-    setOpenDropdown(null);
-    setRegionModalVisible(false);
-  };
-
-  const applyRegion = () => {
-    setSelectedArea(tempArea);
-    setSelectedSigungu(tempSigungu);
-    closeRegionModal();
-  };
+  }, [appliedKeyword, selectedCategory]);
 
   const submitSearch = () => {
     Keyboard.dismiss();
     setAppliedKeyword(searchInput.trim());
   };
 
-  const selectedRegionText =
-    selectedSigungu === '전체'
-      ? selectedArea.name
-      : `${selectedArea.name} ${selectedSigungu}`;
+  const openPlaceDetail = (place: Place) => {
+    router.push({
+      pathname: '/place/[id]',
+      params: {
+        id: String(place.id),
+        title: place.title,
+        areaName: place.areaName,
+        sigunguName: place.sigunguName,
+        address: place.address,
+        category: getCategoryLabel(place.contentTypeId),
+        image: place.image,
+        rating: String(place.rating),
+        distance: String(place.distance),
+      },
+    });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -265,19 +229,16 @@ export default function SearchScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Pressable style={styles.regionButton} onPress={openRegionModal}>
-          <Text style={styles.regionText}>{selectedRegionText}</Text>
-          <Ionicons name="chevron-down" size={16} color={COLORS.text} />
-        </Pressable>
-
-        <Text style={styles.screenTitle}>검색</Text>
+        <View style={styles.header}>
+          <Text style={styles.brand}>Travel Mate</Text>
+          <Text style={styles.screenTitle}>검색</Text>
+          <Text style={styles.description}>
+            여행지, 맛집, 문화시설을 검색하고 나만의 여행 기록으로 연결해보세요.
+          </Text>
+        </View>
 
         <View style={styles.searchBox}>
-          <Ionicons
-            name="search"
-            size={19}
-            color={COLORS.primary}
-          />
+          <Ionicons name="search" size={19} color={COLORS.primary} />
 
           <TextInput
             value={searchInput}
@@ -294,7 +255,7 @@ export default function SearchScreen() {
           </Pressable>
         </View>
 
-        <Text style={styles.sectionTitle}>추천 관광지</Text>
+        <Text style={styles.sectionTitle}>추천 카테고리</Text>
 
         <ScrollView
           horizontal
@@ -326,189 +287,60 @@ export default function SearchScreen() {
           })}
         </ScrollView>
 
+        <View style={styles.resultHeader}>
+          <Text style={styles.resultTitle}>
+            {appliedKeyword ? `"${appliedKeyword}" 검색 결과` : '추천 여행지'}
+          </Text>
+          <Text style={styles.resultCount}>{visiblePlaces.length}곳</Text>
+        </View>
+
         {visiblePlaces.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Ionicons
-              name="search-outline"
-              size={34}
-              color="#B5AECF"
-            />
+            <Ionicons name="search-outline" size={34} color="#B5AECF" />
+            <Text style={styles.emptyTitle}>검색 결과가 없습니다</Text>
             <Text style={styles.emptyText}>
-              선택한 조건에 맞는 관광지가 없습니다.
+              다른 키워드나 카테고리로 다시 검색해보세요.
             </Text>
           </View>
         ) : selectedCategory === '' ? (
           <View style={styles.grid}>
-            {visiblePlaces.slice(0, 6).map((place) => (
-              <GridPlaceCard key={place.id} place={place} />
+            {visiblePlaces.map((place) => (
+              <GridPlaceCard
+                key={place.id}
+                place={place}
+                onPress={() => openPlaceDetail(place)}
+              />
             ))}
           </View>
         ) : (
           <View style={styles.list}>
             {visiblePlaces.map((place) => (
-              <ListPlaceCard key={place.id} place={place} />
+              <ListPlaceCard
+                key={place.id}
+                place={place}
+                onPress={() => openPlaceDetail(place)}
+              />
             ))}
           </View>
         )}
       </ScrollView>
-
-      <Modal
-        visible={regionModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={closeRegionModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.regionModal}>
-            <View style={styles.modalHeader}>
-              <Pressable
-                style={styles.modalBackButton}
-                onPress={closeRegionModal}
-              >
-                <Ionicons
-                  name="arrow-back"
-                  size={22}
-                  color={COLORS.text}
-                />
-              </Pressable>
-
-              <Text style={styles.modalTitle}>지역 설정</Text>
-            </View>
-
-            <Text style={styles.modalLabel}>도 / 광역시</Text>
-
-            <DropdownButton
-              text={tempArea.name}
-              isOpen={openDropdown === 'area'}
-              onPress={() =>
-                setOpenDropdown((current) =>
-                  current === 'area' ? null : 'area',
-                )
-              }
-            />
-
-            {openDropdown === 'area' && (
-              <ScrollView
-                style={styles.dropdownList}
-                nestedScrollEnabled
-              >
-                {REGIONS.map((area) => {
-                  const isSelected = tempArea.code === area.code;
-
-                  return (
-                    <Pressable
-                      key={area.code}
-                      style={[
-                        styles.dropdownItem,
-                        isSelected && styles.selectedDropdownItem,
-                      ]}
-                      onPress={() => {
-                        setTempArea(area);
-                        setTempSigungu('전체');
-                        setOpenDropdown(null);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.dropdownItemText,
-                          isSelected &&
-                            styles.selectedDropdownItemText,
-                        ]}
-                      >
-                        {area.name}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            )}
-
-            <Text style={styles.modalLabel}>시 / 구</Text>
-
-            <DropdownButton
-              text={tempSigungu}
-              isOpen={openDropdown === 'sigungu'}
-              onPress={() =>
-                setOpenDropdown((current) =>
-                  current === 'sigungu' ? null : 'sigungu',
-                )
-              }
-            />
-
-            {openDropdown === 'sigungu' && (
-              <ScrollView
-                style={styles.dropdownList}
-                nestedScrollEnabled
-              >
-                {sigunguOptions.map((sigungu) => {
-                  const isSelected = tempSigungu === sigungu;
-
-                  return (
-                    <Pressable
-                      key={sigungu}
-                      style={[
-                        styles.dropdownItem,
-                        isSelected && styles.selectedDropdownItem,
-                      ]}
-                      onPress={() => {
-                        setTempSigungu(sigungu);
-                        setOpenDropdown(null);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.dropdownItemText,
-                          isSelected &&
-                            styles.selectedDropdownItemText,
-                        ]}
-                      >
-                        {sigungu}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            )}
-
-            <View style={styles.modalActions}>
-              <Pressable
-                style={styles.cancelButton}
-                onPress={closeRegionModal}
-              >
-                <Text style={styles.cancelButtonText}>취소</Text>
-              </Pressable>
-
-              <Pressable
-                style={styles.applyButton}
-                onPress={applyRegion}
-              >
-                <Text style={styles.applyButtonText}>적용하기</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
 
 type PlaceCardProps = {
   place: Place;
+  onPress: () => void;
 };
 
-function GridPlaceCard({ place }: PlaceCardProps) {
+function GridPlaceCard({ place, onPress }: PlaceCardProps) {
   return (
     <Pressable
       style={({ pressed }) => [
         styles.gridCard,
         pressed && styles.pressedCard,
       ]}
-      onPress={() =>
-        Alert.alert(
-          place.title,
-          '관광지 상세 화면은 이후 단계에서 연결합니다.',
-        )
-      }
+      onPress={onPress}
     >
       <Image
         source={{ uri: place.image }}
@@ -517,11 +349,15 @@ function GridPlaceCard({ place }: PlaceCardProps) {
       />
 
       <View style={styles.gridCardContent}>
+        <Text style={styles.cardCategory}>
+          {getCategoryLabel(place.contentTypeId)}
+        </Text>
+
         <Text style={styles.gridCardTitle} numberOfLines={2}>
           {place.title}
         </Text>
 
-        <Text style={styles.gridCardAddress} numberOfLines={3}>
+        <Text style={styles.gridCardAddress} numberOfLines={2}>
           {place.address}
         </Text>
       </View>
@@ -529,19 +365,14 @@ function GridPlaceCard({ place }: PlaceCardProps) {
   );
 }
 
-function ListPlaceCard({ place }: PlaceCardProps) {
+function ListPlaceCard({ place, onPress }: PlaceCardProps) {
   return (
     <Pressable
       style={({ pressed }) => [
         styles.listCard,
         pressed && styles.pressedCard,
       ]}
-      onPress={() =>
-        Alert.alert(
-          place.title,
-          '관광지 상세 화면은 이후 단계에서 연결합니다.',
-        )
-      }
+      onPress={onPress}
     >
       <Image
         source={{ uri: place.image }}
@@ -550,6 +381,10 @@ function ListPlaceCard({ place }: PlaceCardProps) {
       />
 
       <View style={styles.listCardContent}>
+        <Text style={styles.cardCategory}>
+          {getCategoryLabel(place.contentTypeId)}
+        </Text>
+
         <Text style={styles.listCardTitle}>{place.title}</Text>
 
         <Text style={styles.listCardAddress} numberOfLines={2}>
@@ -557,33 +392,9 @@ function ListPlaceCard({ place }: PlaceCardProps) {
         </Text>
 
         <Text style={styles.listCardMeta}>
-          ⭐ {place.rating.toFixed(1)} · {place.distance.toFixed(1)}km
+          ★ {place.rating.toFixed(1)} · {place.distance.toFixed(1)}km
         </Text>
       </View>
-    </Pressable>
-  );
-}
-
-type DropdownButtonProps = {
-  text: string;
-  isOpen: boolean;
-  onPress: () => void;
-};
-
-function DropdownButton({
-  text,
-  isOpen,
-  onPress,
-}: DropdownButtonProps) {
-  return (
-    <Pressable style={styles.dropdownButton} onPress={onPress}>
-      <Text style={styles.dropdownButtonText}>{text}</Text>
-
-      <Ionicons
-        name={isOpen ? 'chevron-up' : 'chevron-down'}
-        size={17}
-        color="#555555"
-      />
     </Pressable>
   );
 }
@@ -593,40 +404,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
-
   content: {
     paddingHorizontal: 22,
-    paddingTop: 12,
-    paddingBottom: 38,
+    paddingTop: 16,
+    paddingBottom: 90,
   },
-
-  regionButton: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    minHeight: 32,
-  },
-
-  regionText: {
-    color: COLORS.text,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-
-  screenTitle: {
-    marginTop: 22,
+  header: {
     marginBottom: 18,
-    color: COLORS.primaryDark,
-    fontSize: 22,
-    fontWeight: '800',
   },
-
+  brand: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  screenTitle: {
+    marginTop: 8,
+    color: COLORS.text,
+    fontSize: 26,
+    fontWeight: '900',
+  },
+  description: {
+    marginTop: 8,
+    color: COLORS.secondaryText,
+    fontSize: 13,
+    lineHeight: 19,
+  },
   searchBox: {
     minHeight: 54,
     flexDirection: 'row',
@@ -637,7 +443,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
-
     shadowColor: '#000000',
     shadowOffset: {
       width: 0,
@@ -647,14 +452,12 @@ const styles = StyleSheet.create({
     shadowRadius: 7,
     elevation: 2,
   },
-
   searchInput: {
     flex: 1,
     paddingVertical: 10,
     color: COLORS.text,
     fontSize: 14,
   },
-
   searchButton: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -663,291 +466,157 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: COLORS.primaryDark,
   },
-
   searchButtonText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
   },
-
   sectionTitle: {
     marginTop: 26,
     marginBottom: 12,
     color: COLORS.text,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '900',
   },
-
   categoryList: {
     gap: 8,
-    paddingBottom: 18,
+    paddingBottom: 20,
   },
-
   categoryButton: {
     paddingVertical: 9,
     paddingHorizontal: 15,
     borderRadius: 18,
     backgroundColor: COLORS.primaryLight,
   },
-
   selectedCategoryButton: {
-    backgroundColor: COLORS.primarySelected,
+    backgroundColor: COLORS.primary,
   },
-
   categoryText: {
     color: COLORS.secondaryText,
     fontSize: 13,
-  },
-
-  selectedCategoryText: {
-    color: COLORS.primary,
     fontWeight: '700',
   },
-
+  selectedCategoryText: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+  },
+  resultHeader: {
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  resultTitle: {
+    color: COLORS.text,
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  resultCount: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: '900',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     rowGap: 12,
   },
-
   gridCard: {
     width: '48.2%',
     overflow: 'hidden',
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     backgroundColor: '#FFFFFF',
-
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.07,
-    shadowRadius: 7,
-    elevation: 3,
   },
-
   gridCardImage: {
     width: '100%',
     height: 130,
     backgroundColor: '#EEEEEE',
   },
-
   gridCardContent: {
-    minHeight: 88,
+    minHeight: 112,
     padding: 11,
   },
-
+  cardCategory: {
+    marginBottom: 6,
+    color: COLORS.primary,
+    fontSize: 11,
+    fontWeight: '900',
+  },
   gridCardTitle: {
     marginBottom: 6,
     color: COLORS.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '900',
   },
-
   gridCardAddress: {
     color: COLORS.secondaryText,
     fontSize: 11,
     lineHeight: 16,
   },
-
   list: {
     gap: 12,
   },
-
   listCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    gap: 13,
+    padding: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: '#FFFFFF',
   },
-
   listCardImage: {
     width: 92,
-    height: 74,
-    borderRadius: 12,
+    height: 92,
+    borderRadius: 14,
     backgroundColor: '#EEEEEE',
   },
-
   listCardContent: {
     flex: 1,
+    minWidth: 0,
   },
-
   listCardTitle: {
-    marginBottom: 6,
+    marginBottom: 5,
     color: COLORS.text,
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '900',
   },
-
   listCardAddress: {
-    marginBottom: 7,
     color: COLORS.secondaryText,
     fontSize: 12,
     lineHeight: 17,
   },
-
   listCardMeta: {
+    marginTop: 8,
     color: COLORS.primary,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '900',
   },
-
-  pressedCard: {
-    opacity: 0.72,
-  },
-
   emptyBox: {
+    marginTop: 24,
+    paddingVertical: 44,
+    paddingHorizontal: 16,
+    borderRadius: 22,
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 230,
-    paddingHorizontal: 20,
+    backgroundColor: COLORS.primaryLight,
   },
-
-  emptyText: {
+  emptyTitle: {
     marginTop: 12,
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  emptyText: {
+    marginTop: 6,
     color: COLORS.secondaryText,
     fontSize: 13,
     textAlign: 'center',
   },
-
-  modalOverlay: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 90,
-    paddingHorizontal: 20,
-    backgroundColor: COLORS.modalOverlay,
-  },
-
-  regionModal: {
-    width: '100%',
-    maxWidth: 350,
-    maxHeight: '78%',
-    padding: 18,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 15,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 18,
-    elevation: 10,
-  },
-
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-
-  modalBackButton: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  modalTitle: {
-    color: COLORS.text,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-
-  modalLabel: {
-    marginTop: 22,
-    marginBottom: 9,
-    color: COLORS.text,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-
-  dropdownButton: {
-    height: 46,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 14,
-    backgroundColor: '#FAFAFA',
-  },
-
-  dropdownButtonText: {
-    color: '#333333',
-    fontSize: 14,
-  },
-
-  dropdownList: {
-    maxHeight: 170,
-    marginTop: 8,
-    padding: 6,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-  },
-
-  dropdownItem: {
-    minHeight: 41,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    borderRadius: 10,
-  },
-
-  selectedDropdownItem: {
-    backgroundColor: COLORS.primarySelected,
-  },
-
-  dropdownItemText: {
-    color: '#555555',
-    fontSize: 13,
-  },
-
-  selectedDropdownItemText: {
-    color: COLORS.primary,
-    fontWeight: '700',
-  },
-
-  modalActions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 22,
-  },
-
-  cancelButton: {
-    flex: 1,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    backgroundColor: '#F1F1F1',
-  },
-
-  cancelButtonText: {
-    color: '#555555',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-
-  applyButton: {
-    flex: 1,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    backgroundColor: COLORS.primary,
-  },
-
-  applyButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
+  pressedCard: {
+    opacity: 0.75,
   },
 });
