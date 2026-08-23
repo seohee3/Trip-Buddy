@@ -70,6 +70,8 @@ export default function TravelRecommendationsScreen() {
         address: place.address,
         category: CATEGORY_LABELS[place.contentTypeId] ?? '관광정보',
         image: place.image,
+        mapX: place.mapX ?? '',
+        mapY: place.mapY ?? '',
       },
     });
   };

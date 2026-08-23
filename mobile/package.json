@@ -11,7 +11,8 @@
     "lint": "expo lint",
     "test:mascot": "node ./scripts/test-mascot-unlocks.cjs",
     "test:firebase-auth": "node ./scripts/test-firebase-auth-static.cjs",
-    "test:travel-type": "node --no-warnings --experimental-strip-types ./scripts/test-travel-type.mjs"
+    "test:travel-type": "node --no-warnings --experimental-strip-types ./scripts/test-travel-type.mjs",
+    "test:nearby": "node --no-warnings --experimental-strip-types ./scripts/test-nearby.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -26,6 +27,7 @@
     "expo-image": "~3.0.11",
     "expo-image-picker": "~17.0.11",
     "expo-linking": "~8.0.12",
+    "expo-location": "~19.0.8",
     "expo-router": "~6.0.24",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
@@ -37,6 +39,7 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-maps": "1.20.1",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",

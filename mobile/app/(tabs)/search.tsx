@@ -244,6 +244,8 @@ export default function SearchScreen() {
         image: place.image,
         rating: place.rating == null ? '' : String(place.rating),
         distance: place.distance == null ? '' : String(place.distance),
+        mapX: place.mapX ?? '',
+        mapY: place.mapY ?? '',
       },
     });
   };

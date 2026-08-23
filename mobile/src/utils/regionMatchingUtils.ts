@@ -4,7 +4,7 @@ import {
   REGIONS,
   type RegionArea,
   type RegionSigungu,
-} from '@/src/data/regions';
+} from '../data/regions.ts';
 
 export type RegionRecordLike = {
   areaCode?: unknown;

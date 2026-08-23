@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -30,6 +30,9 @@ export default function PlaceDetailScreen() {
     image?: string;
     rating?: string;
     distance?: string;
+    distanceLabel?: string;
+    mapX?: string;
+    mapY?: string;
   }>();
 
   const id = String(params.id ?? '');
@@ -41,6 +44,17 @@ export default function PlaceDetailScreen() {
   const image = params.image ?? '';
   const rating = params.rating ?? '';
   const distance = params.distance ?? '';
+  const distanceLabel = params.distanceLabel ?? (distance ? `${distance}km` : '');
+  const longitude = Number(params.mapX);
+  const latitude = Number(params.mapY);
+  const hasMapCoordinates = Number.isFinite(longitude)
+    && Number.isFinite(latitude)
+    && longitude >= -180
+    && longitude <= 180
+    && latitude >= -90
+    && latitude <= 90
+    && params.mapX !== ''
+    && params.mapY !== '';
 
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -98,6 +112,23 @@ export default function PlaceDetailScreen() {
     });
   };
 
+  const openKakaoMap = async () => {
+    if (!hasMapCoordinates) return;
+
+    const appUrl = `kakaomap://look?p=${latitude},${longitude}`;
+    const webUrl = `https://map.kakao.com/link/map/${encodeURIComponent(title)},${latitude},${longitude}`;
+    try {
+      const canOpenApp = await Linking.canOpenURL(appUrl);
+      await Linking.openURL(canOpenApp ? appUrl : webUrl);
+    } catch {
+      try {
+        await Linking.openURL(webUrl);
+      } catch {
+        Alert.alert('카카오맵 열기 실패', '지도 링크를 열 수 없어요. 잠시 후 다시 시도해주세요.');
+      }
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
@@ -131,11 +162,11 @@ export default function PlaceDetailScreen() {
             {areaName} {sigunguName}
           </Text>
 
-          {rating && distance ? (
+          {rating || distanceLabel ? (
             <View style={styles.metaRow}>
-              <Text style={styles.metaText}>★ {rating}</Text>
-              <Text style={styles.metaDot}>·</Text>
-              <Text style={styles.metaText}>{distance}km</Text>
+              {rating ? <Text style={styles.metaText}>★ {rating}</Text> : null}
+              {rating && distanceLabel ? <Text style={styles.metaDot}>·</Text> : null}
+              {distanceLabel ? <Text style={styles.metaText}>{distanceLabel}</Text> : null}
             </View>
           ) : null}
 
@@ -147,10 +178,21 @@ export default function PlaceDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>장소 소개</Text>
             <Text style={styles.sectionText}>
-              여행 중 방문하기 좋은 장소예요. 실제 배포 단계에서는 관광공사 API의 상세
-              설명, 운영 시간, 위치 좌표, 이미지 정보를 연결해 더 자세한 정보를 보여줄 수 있어요.
+              현재 관광공사 API에서 받은 기본정보를 표시하고 있어요. 운영 시간과 이용 정보는
+              방문 전에 공식 안내 또는 지도에서 다시 확인해주세요.
             </Text>
           </View>
+
+          {hasMapCoordinates ? (
+            <Pressable
+              style={({ pressed }) => [styles.kakaoMapButton, pressed && styles.pressed]}
+              onPress={() => void openKakaoMap()}
+              accessibilityRole="button"
+              accessibilityLabel={`${title} 카카오맵에서 보기`}
+            >
+              <Text style={styles.kakaoMapButtonText}>카카오맵에서 보기</Text>
+            </Pressable>
+          ) : null}
 
           <View style={styles.actionRow}>
             <Pressable
@@ -281,6 +323,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
   },
+  kakaoMapButton: {
+    height: 50,
+    marginTop: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: '#FEE500',
+  },
+  kakaoMapButtonText: {
+    color: '#191919',
+    fontSize: 14,
+    fontWeight: '900',
+  },
   actionRow: {
     marginTop: 30,
     flexDirection: 'row',
@@ -319,5 +374,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '900',
+  },
+  pressed: {
+    opacity: 0.72,
   },
 });

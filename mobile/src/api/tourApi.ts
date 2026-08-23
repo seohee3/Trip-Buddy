@@ -10,9 +10,13 @@ export type TourPlace = {
   distance?: number;
   mapX?: string;
   mapY?: string;
+  distanceMeters?: number;
+  areaCode?: string;
+  sigunguCode?: string;
 };
 
-export type TourApiEndpoint = 'searchKeyword2' | 'areaBasedList2';
+export type TourApiEndpoint = 'searchKeyword2' | 'areaBasedList2' | 'locationBasedList2';
+export type TourApiArrange = 'O' | 'E';
 export type TourApiErrorKind = 'missing-key' | 'network' | 'http' | 'invalid-response' | 'api';
 
 export type TourApiRequestSummary = {
@@ -21,7 +25,10 @@ export type TourApiRequestSummary = {
   contentTypeId: string | null;
   pageNo: number;
   numOfRows: number;
-  arrange: 'O';
+  arrange: TourApiArrange;
+  mapX: number | null;
+  mapY: number | null;
+  radius: number | null;
 };
 
 export type TourApiResponseSummary = TourApiRequestSummary & {
@@ -42,6 +49,10 @@ export type TourApiRequest = {
   contentTypeId?: string;
   pageNo?: number;
   numOfRows?: number;
+  arrange?: TourApiArrange;
+  mapX?: number;
+  mapY?: number;
+  radius?: number;
 };
 
 export const TOUR_API_BASE_URL = 'https://apis.data.go.kr/B551011/KorService2';
@@ -68,6 +79,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function text(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function finiteNumber(value: unknown) {
+  if (value === '' || value == null) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 function getTourApiKey() {
@@ -103,6 +120,9 @@ function normalizeItem(value: unknown): TourPlace | null {
     image: text(value.firstimage) || text(value.firstimage2),
     mapX: text(value.mapx) || undefined,
     mapY: text(value.mapy) || undefined,
+    distanceMeters: finiteNumber(value.dist),
+    areaCode: text(value.areacode) || undefined,
+    sigunguCode: text(value.sigungucode) || undefined,
   };
 }
 
@@ -139,13 +159,33 @@ export async function requestTourPlaces(request: TourApiRequest): Promise<TourAp
   const serviceKey = getTourApiKey();
   const pageNo = Math.max(1, Math.floor(request.pageNo ?? 1));
   const numOfRows = Math.min(50, Math.max(1, Math.floor(request.numOfRows ?? 20)));
+  const isLocationRequest = request.endpoint === 'locationBasedList2';
+  const mapX = finiteNumber(request.mapX);
+  const mapY = finiteNumber(request.mapY);
+  const radius = finiteNumber(request.radius);
+
+  if (
+    isLocationRequest
+    && (mapX === undefined || mapY === undefined || radius === undefined
+      || mapX < -180 || mapX > 180 || mapY < -90 || mapY > 90
+      || radius < 1 || radius > 20000)
+  ) {
+    throw new TourApiRequestError(
+      'invalid-response',
+      '위치기반 관광정보 요청 좌표 또는 반경이 올바르지 않습니다.',
+    );
+  }
+
   const summary: TourApiRequestSummary = {
     endpoint: request.endpoint,
     keyword: request.keyword?.trim() || null,
     contentTypeId: request.contentTypeId?.trim() || null,
     pageNo,
     numOfRows,
-    arrange: 'O',
+    arrange: request.arrange ?? (isLocationRequest ? 'E' : 'O'),
+    mapX: mapX ?? null,
+    mapY: mapY ?? null,
+    radius: radius ?? null,
   };
   const params = new URLSearchParams({
     MobileOS: 'ETC',
@@ -158,6 +198,11 @@ export async function requestTourPlaces(request: TourApiRequest): Promise<TourAp
   });
   if (summary.keyword) params.set('keyword', summary.keyword);
   if (summary.contentTypeId) params.set('contentTypeId', summary.contentTypeId);
+  if (isLocationRequest) {
+    params.set('mapX', String(summary.mapX));
+    params.set('mapY', String(summary.mapY));
+    params.set('radius', String(summary.radius));
+  }
 
   let response: Response;
   try {
@@ -236,5 +281,38 @@ export async function fetchAreaBasedTourPlaces(
     contentTypeId,
     numOfRows: options.numOfRows,
     pageNo: options.pageNo,
+  });
+}
+
+export type LocationBasedTourPlacesOptions = {
+  latitude: number;
+  longitude: number;
+  radius?: number;
+  contentTypeId?: string;
+  numOfRows?: number;
+  pageNo?: number;
+};
+
+/**
+ * 한국관광공사 KorService2의 위치기반 목록을 거리순(E)으로 조회합니다.
+ * mapX는 경도, mapY는 위도이며 radius의 단위는 미터입니다.
+ */
+export async function fetchLocationBasedTourPlaces({
+  latitude,
+  longitude,
+  radius = 3000,
+  contentTypeId,
+  numOfRows = 50,
+  pageNo = 1,
+}: LocationBasedTourPlacesOptions): Promise<TourApiResult> {
+  return requestTourPlaces({
+    endpoint: 'locationBasedList2',
+    mapX: longitude,
+    mapY: latitude,
+    radius,
+    arrange: 'E',
+    contentTypeId,
+    numOfRows,
+    pageNo,
   });
 }

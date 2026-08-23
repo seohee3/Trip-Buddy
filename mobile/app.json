@@ -9,9 +9,18 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "kakaomap"
+        ]
+      }
     },
     "android": {
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -28,6 +37,14 @@
     "plugins": [
       "expo-router",
       "expo-image-picker",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "현재 위치 반경 3km의 주변 관광지를 찾기 위해 위치를 사용합니다.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
       [
         "expo-splash-screen",
         {
