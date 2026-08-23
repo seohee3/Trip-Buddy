@@ -1,6 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { findRegionSelection, getFullRegionName } from '@/src/data/regions';
+import { getFullRegionName } from '@/src/data/regions';
 import type { FavoritePlace, TravelRecord, UserProfile } from '@/src/types/travel';
+import {
+  resolveRegionSelection,
+  type RegionRecordLike,
+} from '@/src/utils/regionMatchingUtils';
 
 const PROFILE_KEY = '@trip-buddy/profile';
 const RECORDS_KEY = '@trip-buddy/travel-records';
@@ -70,23 +74,35 @@ function parseJson<T>(value: string | null, fallback: T): T {
   }
 }
 
-type LegacyTravelRecord = Partial<TravelRecord> & {
-  region?: string;
-};
+type LegacyTravelRecord = Partial<TravelRecord> & RegionRecordLike;
+
+function firstNonEmptyText(...values: unknown[]) {
+  return values.find((value): value is string => typeof value === 'string' && Boolean(value.trim()))?.trim() ?? '';
+}
 
 /** 기존 area 단위 기록을 공통 지역 모델로 보완합니다. 알 수 없는 문자열도 원문을 보존합니다. */
 export function migrateTravelRecord(value: unknown, index: number): TravelRecord | null {
   if (!value || typeof value !== 'object') return null;
 
   const raw = value as LegacyTravelRecord;
-  const legacyRegion = raw.fullRegionName ?? raw.region ?? raw.areaName ?? '';
-  const selection = findRegionSelection(legacyRegion);
-  const areaCode = raw.areaCode ?? selection?.area.code ?? '';
-  const areaName = raw.areaName ?? selection?.area.name ?? legacyRegion;
-  const sigungu = selection?.sigungu;
-  const sigunguCode = raw.sigunguCode ?? sigungu?.code ?? '';
-  const sigunguName = raw.sigunguName ?? sigungu?.name ?? '';
-  const fullRegionName = raw.fullRegionName ?? getFullRegionName(areaName, sigunguName) ?? legacyRegion;
+  const selection = resolveRegionSelection(raw);
+  const legacyRegion = firstNonEmptyText(
+    raw.fullRegionName,
+    raw.region,
+    raw.address,
+    raw.addressName,
+    raw.roadAddress,
+    raw.roadAddressName,
+    raw.addr1,
+    raw.placeAddress,
+    raw.areaName,
+  );
+  const areaCode = selection?.area.code ?? firstNonEmptyText(raw.areaCode);
+  const areaName = selection?.area.name ?? firstNonEmptyText(raw.areaName, legacyRegion);
+  const sigunguCode = selection?.sigungu.code ?? firstNonEmptyText(raw.sigunguCode);
+  const sigunguName = selection?.sigungu.name ?? firstNonEmptyText(raw.sigunguName);
+  const fullRegionName = selection?.fullRegionName
+    ?? firstNonEmptyText(raw.fullRegionName, raw.region, getFullRegionName(areaName, sigunguName), legacyRegion);
 
   if (!raw.id && !raw.title) return null;
 

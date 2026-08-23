@@ -34,7 +34,7 @@ export default function CalendarScreen() {
       return;
     }
     const finalEndDate = endDate || startDate;
-    router.replace({ pathname: '/record/create', params: { startDate, endDate: finalEndDate } });
+    router.dismissTo({ pathname: '/record/create', params: { startDate, endDate: finalEndDate } });
   };
 
   return (

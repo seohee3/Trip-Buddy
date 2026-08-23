@@ -32,8 +32,11 @@ export type FavoritePlace = {
 
 export type Mascot = {
   id: string;
+  areaCode: string;
+  areaName: string;
+  sigunguCode: string;
+  sigunguName: string;
   regionName: string;
   mascotName: string;
   concept: string;
-  image: string;
 };

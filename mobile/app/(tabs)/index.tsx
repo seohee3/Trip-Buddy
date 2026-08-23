@@ -5,12 +5,13 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTravelData } from '@/src/context/TravelDataContext';
 import { MASCOTS } from '@/src/data/mascots';
+import { recordUnlocksMascot } from '@/src/utils/mascotUnlockUtils';
 import { getRecordRegionName, getVisitedRegions } from '@/src/utils/travel';
 
 export default function HomeScreen() {
   const { profile, records, isLoading } = useTravelData();
   const visitedRegions = getVisitedRegions(records);
-  const mascotCount = MASCOTS.filter((mascot) => visitedRegions.includes(mascot.regionName)).length;
+  const mascotCount = MASCOTS.filter((mascot) => records.some((record) => recordUnlocksMascot(record, mascot))).length;
 
   if (isLoading) return <View style={styles.loading}><Text style={styles.loadingText}>여행 데이터를 불러오는 중입니다.</Text></View>;
 
