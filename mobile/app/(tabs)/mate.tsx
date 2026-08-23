@@ -1,16 +1,13 @@
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type Mate = {
-  id: number;
-  name: string;
-  age: number;
-  region: string;
-  match: number;
-  image: string;
-  sub: string;
-};
+import { useAuth } from '@/src/context/AuthContext';
+import { TRIP_BUDDY_MATES } from '@/src/data/mates';
+import { logFirebaseError } from '@/src/firebase/errors';
+import { fetchMatesFromFirestore } from '@/src/firebase/mateRepository';
+import type { Mate } from '@/src/types/mate';
 
 const COLORS = {
   primary: '#5C3DFF',
@@ -23,60 +20,31 @@ const COLORS = {
   border: '#EEEEEE',
 };
 
-const TRIP_BUDDY_MATES: Mate[] = [
-  {
-    id: 1,
-    name: '여행자_가람',
-    age: 28,
-    region: '서울',
-    match: 89,
-    image:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
-    sub: '맛집과 감성 카페 여행을 좋아해요',
-  },
-  {
-    id: 2,
-    name: '여행러_민수',
-    age: 30,
-    region: '서울',
-    match: 86,
-    image:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
-    sub: '계획적인 일정과 야경 산책을 좋아해요',
-  },
-  {
-    id: 3,
-    name: '트립메이트_지은',
-    age: 26,
-    region: '서울',
-    match: 83,
-    image:
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=300&q=80',
-    sub: '사진 찍는 여행을 좋아해요',
-  },
-  {
-    id: 4,
-    name: '여행하는_준호',
-    age: 29,
-    region: '서울',
-    match: 81,
-    image:
-      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80',
-    sub: '자연 풍경과 조용한 코스를 선호해요',
-  },
-  {
-    id: 5,
-    name: '트래블러_소희',
-    age: 27,
-    region: '서울',
-    match: 70,
-    image:
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
-    sub: '전시, 카페, 산책 코스를 좋아해요',
-  },
-];
-
 export default function MateScreen() {
+  const { user } = useAuth();
+  const [mates, setMates] = useState<Mate[]>(TRIP_BUDDY_MATES);
+
+  useEffect(() => {
+    if (!user) {
+      setMates(TRIP_BUDDY_MATES);
+      return;
+    }
+
+    let mounted = true;
+
+    fetchMatesFromFirestore(user.uid)
+      .then((firestoreMates) => {
+        if (mounted && firestoreMates.length > 0) setMates(firestoreMates);
+      })
+      .catch((error) => {
+        logFirebaseError('메이트 목록 조회', error);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
+
   const openMateDetail = (mate: Mate) => {
     router.push({
       pathname: '/mate/[id]',
@@ -119,7 +87,7 @@ export default function MateScreen() {
         </View>
 
         <View style={styles.mateList}>
-          {TRIP_BUDDY_MATES.map((mate) => (
+          {mates.map((mate) => (
             <Pressable
               key={mate.id}
               style={({ pressed }) => [

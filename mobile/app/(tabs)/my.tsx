@@ -3,7 +3,9 @@ import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'rea
 import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/src/context/AuthContext';
 import { useTravelData } from '@/src/context/TravelDataContext';
+import { AuthActionError } from '@/src/firebase/authErrors';
 import type { TravelRecord } from '@/src/types/travel';
 import {
   getFavoritePlaces,
@@ -12,6 +14,7 @@ import {
 } from '../../src/storage/favoritePlaces';
 
 export default function MyScreen() {
+  const { logout, isSubmitting } = useAuth();
   const { profile, records, isLoading, deleteRecord } = useTravelData();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -93,6 +96,28 @@ export default function MyScreen() {
           } catch (error) {
             console.error(error);
             Alert.alert('삭제 실패', '찜한 장소를 삭제하지 못했어요.');
+          }
+        },
+      },
+    ]);
+  };
+
+  const confirmLogout = () => {
+    Alert.alert('로그아웃', 'Trip-Buddy에서 로그아웃할까요?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '로그아웃',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await logout();
+          } catch (error) {
+            Alert.alert(
+              '로그아웃 실패',
+              error instanceof AuthActionError
+                ? error.message
+                : '로그아웃하지 못했습니다. 다시 시도해주세요.',
+            );
           }
         },
       },
@@ -196,6 +221,21 @@ export default function MyScreen() {
             ))}
           </View>
         )}
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.logoutButton,
+            pressed && styles.pressed,
+            isSubmitting && styles.logoutButtonDisabled,
+          ]}
+          onPress={confirmLogout}
+          disabled={isSubmitting}
+          accessibilityRole="button"
+          accessibilityLabel="로그아웃"
+          accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
+        >
+          <Text style={styles.logoutText}>{isSubmitting ? '로그아웃 중...' : '로그아웃'}</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -559,6 +599,24 @@ const styles = StyleSheet.create({
     color: '#D9534F',
     fontSize: 10,
     fontWeight: '700',
+  },
+  logoutButton: {
+    minHeight: 48,
+    marginTop: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0D8D5',
+    borderRadius: 14,
+    backgroundColor: '#FFF8F7',
+  },
+  logoutButtonDisabled: {
+    opacity: 0.55,
+  },
+  logoutText: {
+    color: '#C4473A',
+    fontSize: 13,
+    fontWeight: '800',
   },
   pressed: {
     opacity: 0.72,

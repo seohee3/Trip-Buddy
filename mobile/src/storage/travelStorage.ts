@@ -6,16 +6,30 @@ import {
   type RegionRecordLike,
 } from '@/src/utils/regionMatchingUtils';
 
-const PROFILE_KEY = '@trip-buddy/profile';
+const LEGACY_PROFILE_KEY = '@trip-buddy/profile';
+const PROFILE_MIGRATION_MARKER_KEY = '@trip-buddy/profile-migration-owner';
+const USER_PROFILE_KEY_PREFIX = '@trip-buddy/profile/';
 const RECORDS_KEY = '@trip-buddy/travel-records';
 const FAVORITES_KEY = '@trip-buddy/favorite-places';
+
+const DEFAULT_PROFILE_IMAGE =
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80';
 
 export const DEFAULT_PROFILE: UserProfile = {
   name: '남지',
   bio: '여행을 좋아하는 남지',
-  image:
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
+  image: DEFAULT_PROFILE_IMAGE,
 };
+
+export function createDefaultUserProfile(name?: string | null, email?: string | null): UserProfile {
+  const emailName = email?.split('@')[0]?.trim() ?? '';
+
+  return {
+    name: firstNonEmptyText(name, emailName, '여행자'),
+    bio: '소개글이 없습니다.',
+    image: DEFAULT_PROFILE_IMAGE,
+  };
+}
 
 export const DEFAULT_RECORDS: TravelRecord[] = [
   {
@@ -64,6 +78,11 @@ type StoredData = {
   favorites: FavoritePlace[];
 };
 
+function userProfileKey(uid: string) {
+  if (!uid) throw new Error('프로필 캐시를 불러오려면 사용자 UID가 필요합니다.');
+  return `${USER_PROFILE_KEY_PREFIX}${uid}`;
+}
+
 function parseJson<T>(value: string | null, fallback: T): T {
   if (!value) return fallback;
 
@@ -72,6 +91,17 @@ function parseJson<T>(value: string | null, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+function normalizeStoredProfile(value: unknown, fallback: UserProfile): UserProfile {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return fallback;
+
+  const raw = value as Partial<UserProfile>;
+  return {
+    name: firstNonEmptyText(raw.name, fallback.name),
+    bio: typeof raw.bio === 'string' ? raw.bio : fallback.bio,
+    image: typeof raw.image === 'string' ? raw.image : fallback.image,
+  };
 }
 
 type LegacyTravelRecord = Partial<TravelRecord> & RegionRecordLike;
@@ -130,11 +160,12 @@ export function migrateTravelRecords(value: unknown): TravelRecord[] {
   return value.map(migrateTravelRecord).filter((record): record is TravelRecord => record !== null);
 }
 
-export async function loadTravelData(): Promise<StoredData> {
+export async function loadUserProfile(uid: string, fallback: UserProfile): Promise<UserProfile> {
+  const profileKey = userProfileKey(uid);
   const storedValues = await AsyncStorage.multiGet([
-    PROFILE_KEY,
-    RECORDS_KEY,
-    FAVORITES_KEY,
+    profileKey,
+    LEGACY_PROFILE_KEY,
+    PROFILE_MIGRATION_MARKER_KEY,
   ]);
 
   const storedData = storedValues.reduce<Record<string, string | null>>(
@@ -145,17 +176,49 @@ export async function loadTravelData(): Promise<StoredData> {
     {},
   );
 
-  const profileValue = storedData[PROFILE_KEY] ?? null;
+  const cachedValue = storedData[profileKey] ?? null;
+  if (cachedValue) {
+    return normalizeStoredProfile(parseJson<unknown>(cachedValue, fallback), fallback);
+  }
+
+  const legacyValue = storedData[LEGACY_PROFILE_KEY] ?? null;
+  const migrationOwner = storedData[PROFILE_MIGRATION_MARKER_KEY] ?? null;
+  const shouldMigrateLegacyProfile = Boolean(legacyValue) && !migrationOwner;
+  const profile = shouldMigrateLegacyProfile
+    ? normalizeStoredProfile(parseJson<unknown>(legacyValue, fallback), fallback)
+    : fallback;
+  const writes: [string, string][] = [[profileKey, JSON.stringify(profile)]];
+
+  if (shouldMigrateLegacyProfile) {
+    writes.push([PROFILE_MIGRATION_MARKER_KEY, uid]);
+  }
+
+  await AsyncStorage.multiSet(writes);
+  return profile;
+}
+
+export async function loadTravelData(uid: string, profileFallback: UserProfile): Promise<StoredData> {
+  const [profile, storedValues] = await Promise.all([
+    loadUserProfile(uid, profileFallback),
+    AsyncStorage.multiGet([RECORDS_KEY, FAVORITES_KEY]),
+  ]);
+
+  const storedData = storedValues.reduce<Record<string, string | null>>(
+    (result, [key, value]) => {
+      result[key] = value;
+      return result;
+    },
+    {},
+  );
+
   const recordsValue = storedData[RECORDS_KEY] ?? null;
   const favoritesValue = storedData[FAVORITES_KEY] ?? null;
 
-  const profile = parseJson(profileValue, DEFAULT_PROFILE);
   const storedRecords = parseJson<unknown>(recordsValue, DEFAULT_RECORDS);
   const records = migrateTravelRecords(storedRecords);
   const favorites = parseJson(favoritesValue, [] as FavoritePlace[]);
 
   const writes: Promise<void>[] = [];
-  if (!profileValue) writes.push(AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile)));
   if (!recordsValue || JSON.stringify(records) !== JSON.stringify(storedRecords)) {
     writes.push(AsyncStorage.setItem(RECORDS_KEY, JSON.stringify(records)));
   }
@@ -165,8 +228,8 @@ export async function loadTravelData(): Promise<StoredData> {
   return { profile, records, favorites };
 }
 
-export async function persistProfile(profile: UserProfile) {
-  await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+export async function persistProfile(uid: string, profile: UserProfile) {
+  await AsyncStorage.setItem(userProfileKey(uid), JSON.stringify(profile));
 }
 
 export async function persistRecords(records: TravelRecord[]) {

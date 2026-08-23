@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AuthProvider, useAuth } from '@/src/context/AuthContext';
 import { TravelDataProvider } from '@/src/context/TravelDataContext';
 
 export const unstable_settings = {
@@ -15,8 +16,30 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <TravelDataProvider>
-        <Stack screenOptions={{ headerShown: false }}>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
+      <StatusBar style="auto" />
+    </ThemeProvider>
+  );
+}
+
+function AppNavigator() {
+  const { user, isAuthReady } = useAuth();
+
+  return (
+    <TravelDataProvider key={user?.uid ?? 'signed-out'}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard={!isAuthReady}>
+          <Stack.Screen name="auth-loading" />
+        </Stack.Protected>
+
+        <Stack.Protected guard={isAuthReady && !user}>
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+        </Stack.Protected>
+
+        <Stack.Protected guard={isAuthReady && Boolean(user)}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="profile-edit" />
           <Stack.Screen name="record/create" />
@@ -24,10 +47,16 @@ export default function RootLayout() {
           <Stack.Screen name="record/[id]" />
           <Stack.Screen name="travel-map" />
           <Stack.Screen name="mascot-book" />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: true, title: 'Modal' }} />
-        </Stack>
-      </TravelDataProvider>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+          <Stack.Screen name="place/[id]" />
+          <Stack.Screen name="mate/[id]" />
+          <Stack.Screen name="mate/chat/[id]" />
+          <Stack.Screen name="mate/companion/[id]" />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: 'modal', headerShown: true, title: 'Modal' }}
+          />
+        </Stack.Protected>
+      </Stack>
+    </TravelDataProvider>
   );
 }

@@ -1,9 +1,15 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { PropsWithChildren } from 'react';
+import { useAuth } from '@/src/context/AuthContext';
+import { logFirebaseError } from '@/src/firebase/errors';
+import {
+  hydrateProfileFromFirestore,
+  saveProfileToFirestore,
+} from '@/src/firebase/profileRepository';
 import type { FavoritePlace, TravelRecord, UserProfile } from '@/src/types/travel';
 import {
-  DEFAULT_PROFILE,
   DEFAULT_RECORDS,
+  createDefaultUserProfile,
   loadTravelData,
   persistFavorites,
   persistProfile,
@@ -27,39 +33,83 @@ type TravelDataContextValue = {
 const TravelDataContext = createContext<TravelDataContextValue | null>(null);
 
 export function TravelDataProvider({ children }: PropsWithChildren) {
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile>({ name: '', bio: '', image: '' });
   const [records, setRecords] = useState<TravelRecord[]>([]);
   const [favorites, setFavorites] = useState<FavoritePlace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [storageError, setStorageError] = useState<string | null>(null);
+  const profileRevisionRef = useRef(0);
+  const profileHydrationPromiseRef = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
     let mounted = true;
+    profileRevisionRef.current += 1;
+    profileHydrationPromiseRef.current = null;
 
-    loadTravelData()
-      .then((data) => {
-        if (!mounted) return;
-        setProfile(data.profile);
-        setRecords(data.records);
-        setFavorites(data.favorites);
-      })
-      .catch((error) => {
+    setProfile({ name: '', bio: '', image: '' });
+    setRecords([]);
+    setFavorites([]);
+    setStorageError(null);
+
+    if (!user) {
+      setIsLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
+
+    setIsLoading(true);
+    const profileFallback = createDefaultUserProfile(user.displayName, user.email);
+
+    const loadLocalDataThenHydrateProfile = async () => {
+      let localProfile = profileFallback;
+
+      try {
+        const data = await loadTravelData(user.uid, profileFallback);
+        localProfile = data.profile;
+
+        if (mounted) {
+          setProfile(data.profile);
+          setRecords(data.records);
+          setFavorites(data.favorites);
+        }
+      } catch (error) {
         console.error('여행 데이터 로딩 오류:', error);
         if (mounted) {
-          setProfile(DEFAULT_PROFILE);
+          setProfile(profileFallback);
           setRecords(DEFAULT_RECORDS);
           setFavorites([]);
           setStorageError('저장된 데이터를 불러오지 못했습니다. 기본 데이터를 표시합니다.');
         }
-      })
-      .finally(() => {
+      } finally {
         if (mounted) setIsLoading(false);
-      });
+      }
+
+      const revisionAtHydrationStart = profileRevisionRef.current;
+      const hydrationPromise = hydrateProfileFromFirestore(user, localProfile)
+        .then(async (hydratedProfile) => {
+          if (!mounted || profileRevisionRef.current !== revisionAtHydrationStart) return;
+
+          await persistProfile(user.uid, hydratedProfile);
+          if (mounted && profileRevisionRef.current === revisionAtHydrationStart) {
+            setProfile(hydratedProfile);
+          }
+        })
+        .catch((error) => {
+          logFirebaseError('프로필 초기 동기화', error);
+        });
+
+      profileHydrationPromiseRef.current = hydrationPromise;
+      await hydrationPromise;
+    };
+
+    void loadLocalDataThenHydrateProfile();
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [user]);
 
   const value = useMemo<TravelDataContextValue>(
     () => ({
@@ -69,8 +119,11 @@ export function TravelDataProvider({ children }: PropsWithChildren) {
       isLoading,
       storageError,
       updateProfile: async (nextProfile) => {
+        if (!user) throw new Error('프로필을 저장하려면 로그인이 필요합니다.');
+        profileRevisionRef.current += 1;
+
         try {
-          await persistProfile(nextProfile);
+          await persistProfile(user.uid, nextProfile);
           setProfile(nextProfile);
           setStorageError(null);
         } catch (error) {
@@ -78,6 +131,17 @@ export function TravelDataProvider({ children }: PropsWithChildren) {
           setStorageError('프로필을 저장하지 못했습니다.');
           throw error;
         }
+
+        void (async () => {
+          try {
+            await profileHydrationPromiseRef.current;
+            await saveProfileToFirestore(user, nextProfile);
+            setStorageError(null);
+          } catch (error) {
+            logFirebaseError('프로필 저장 동기화', error);
+            setStorageError('프로필은 기기에 저장했지만 Firebase와 동기화하지 못했습니다.');
+          }
+        })();
       },
       addRecord: async (record) => {
         const normalizedRecord = migrateTravelRecord(record, 0) ?? record;
@@ -129,7 +193,7 @@ export function TravelDataProvider({ children }: PropsWithChildren) {
         }
       },
     }),
-    [favorites, isLoading, profile, records, storageError],
+    [favorites, isLoading, profile, records, storageError, user],
   );
 
   return <TravelDataContext.Provider value={value}>{children}</TravelDataContext.Provider>;
