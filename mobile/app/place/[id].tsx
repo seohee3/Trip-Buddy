@@ -38,11 +38,9 @@ export default function PlaceDetailScreen() {
   const sigunguName = params.sigunguName ?? '구/군';
   const address = params.address ?? '주소 정보 없음';
   const category = params.category ?? '관광지';
-  const image =
-    params.image ??
-    'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80';
-  const rating = params.rating ?? '4.8';
-  const distance = params.distance ?? '1.5';
+  const image = params.image ?? '';
+  const rating = params.rating ?? '';
+  const distance = params.distance ?? '';
 
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -115,7 +113,13 @@ export default function PlaceDetailScreen() {
           <View style={styles.headerSpace} />
         </View>
 
-        <Image source={{ uri: image }} style={styles.heroImage} />
+        {image ? (
+          <Image source={{ uri: image }} style={styles.heroImage} />
+        ) : (
+          <View style={[styles.heroImage, styles.noImage]}>
+            <Text style={styles.noImageText}>제공된 이미지가 없습니다</Text>
+          </View>
+        )}
 
         <View style={styles.body}>
           <View style={styles.categoryBadge}>
@@ -127,11 +131,13 @@ export default function PlaceDetailScreen() {
             {areaName} {sigunguName}
           </Text>
 
-          <View style={styles.metaRow}>
-            <Text style={styles.metaText}>★ {rating}</Text>
-            <Text style={styles.metaDot}>·</Text>
-            <Text style={styles.metaText}>{distance}km</Text>
-          </View>
+          {rating && distance ? (
+            <View style={styles.metaRow}>
+              <Text style={styles.metaText}>★ {rating}</Text>
+              <Text style={styles.metaDot}>·</Text>
+              <Text style={styles.metaText}>{distance}km</Text>
+            </View>
+          ) : null}
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>주소</Text>
@@ -208,6 +214,15 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 260,
     backgroundColor: COLORS.lightPurple,
+  },
+  noImage: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noImageText: {
+    color: COLORS.secondaryText,
+    fontSize: 13,
+    fontWeight: '700',
   },
   body: {
     paddingHorizontal: 20,

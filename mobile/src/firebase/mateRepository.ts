@@ -3,6 +3,13 @@ import { collection, getDocs } from 'firebase/firestore';
 import { TRIP_BUDDY_MATES } from '@/src/data/mates';
 import { getFirebaseFirestore } from '@/src/firebase/app';
 import type { Mate } from '@/src/types/mate';
+import {
+  AXIS_POLES,
+  TRAVEL_AXIS_ORDER,
+  isTravelTypeCode,
+  type TravelAxis,
+  type TravelPole,
+} from '@/src/travel-type/model';
 
 const DEFAULT_MATE_IMAGE = TRIP_BUDDY_MATES[0].image;
 
@@ -48,6 +55,25 @@ function timestampToIso(value: unknown): string | null {
   }
 }
 
+function stringList(value: unknown) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
+      .map((item) => item.trim())
+      .slice(0, 12)
+    : undefined;
+}
+
+function axisPreferences(value: unknown): Partial<Record<TravelAxis, TravelPole>> | undefined {
+  if (!isRecord(value)) return undefined;
+  const result: Partial<Record<TravelAxis, TravelPole>> = {};
+
+  for (const axis of TRAVEL_AXIS_ORDER) {
+    const pole = value[axis];
+    if (AXIS_POLES[axis].includes(pole as TravelPole)) result[axis] = pole as TravelPole;
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
 export function normalizeMateDocument(id: string, value: unknown): Mate {
   const data = isRecord(value) ? value : {};
 
@@ -61,6 +87,9 @@ export function normalizeMateDocument(id: string, value: unknown): Mate {
     sub: textOr(data.sub, '함께 여행할 메이트예요'),
     isActive: typeof data.isActive === 'boolean' ? data.isActive : false,
     updatedAt: timestampToIso(data.updatedAt),
+    travelTypeCode: isTravelTypeCode(data.travelTypeCode) ? data.travelTypeCode : undefined,
+    travelTags: stringList(data.travelTags),
+    axisPreferences: axisPreferences(data.axisPreferences),
   };
 }
 

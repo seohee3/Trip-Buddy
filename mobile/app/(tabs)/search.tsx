@@ -242,8 +242,8 @@ export default function SearchScreen() {
         address: place.address,
         category: getCategoryLabel(place.contentTypeId),
         image: place.image,
-        rating: String(place.rating),
-        distance: String(place.distance),
+        rating: place.rating == null ? '' : String(place.rating),
+        distance: place.distance == null ? '' : String(place.distance),
       },
     });
   };
@@ -383,11 +383,14 @@ function GridPlaceCard({ place, onPress }: PlaceCardProps) {
       ]}
       onPress={onPress}
     >
-      <Image
-        source={{ uri: place.image }}
-        style={styles.gridCardImage}
-        resizeMode="cover"
-      />
+      {place.image ? (
+        <Image source={{ uri: place.image }} style={styles.gridCardImage} resizeMode="cover" />
+      ) : (
+        <View style={[styles.gridCardImage, styles.noImage]}>
+          <Ionicons name="image-outline" size={28} color="#B5AECF" />
+          <Text style={styles.noImageText}>이미지 없음</Text>
+        </View>
+      )}
 
       <View style={styles.gridCardContent}>
         <Text style={styles.cardCategory}>
@@ -415,11 +418,13 @@ function ListPlaceCard({ place, onPress }: PlaceCardProps) {
       ]}
       onPress={onPress}
     >
-      <Image
-        source={{ uri: place.image }}
-        style={styles.listCardImage}
-        resizeMode="cover"
-      />
+      {place.image ? (
+        <Image source={{ uri: place.image }} style={styles.listCardImage} resizeMode="cover" />
+      ) : (
+        <View style={[styles.listCardImage, styles.noImage]}>
+          <Ionicons name="image-outline" size={24} color="#B5AECF" />
+        </View>
+      )}
 
       <View style={styles.listCardContent}>
         <Text style={styles.cardCategory}>
@@ -432,9 +437,11 @@ function ListPlaceCard({ place, onPress }: PlaceCardProps) {
           {place.address}
         </Text>
 
-        <Text style={styles.listCardMeta}>
-          ★ {place.rating.toFixed(1)} · {place.distance.toFixed(1)}km
-        </Text>
+        {place.rating != null && place.distance != null ? (
+          <Text style={styles.listCardMeta}>
+            ★ {place.rating.toFixed(1)} · {place.distance.toFixed(1)}km
+          </Text>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -636,6 +643,15 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 12,
     fontWeight: '900',
+  },
+  noImage: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noImageText: {
+    marginTop: 4,
+    color: '#999999',
+    fontSize: 10,
   },
   emptyBox: {
     marginTop: 24,

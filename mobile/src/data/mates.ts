@@ -12,6 +12,8 @@ export const TRIP_BUDDY_MATES: Mate[] = [
     sub: '맛집과 감성 카페 여행을 좋아해요',
     isActive: true,
     updatedAt: null,
+    travelTypeCode: 'SRHT',
+    travelTags: ['맛집', '감성카페', '함께'],
   },
   {
     id: '2',
@@ -24,6 +26,8 @@ export const TRIP_BUDDY_MATES: Mate[] = [
     sub: '계획적인 일정과 야경 산책을 좋아해요',
     isActive: true,
     updatedAt: null,
+    travelTypeCode: 'PRLT',
+    travelTags: ['계획', '야경', '산책'],
   },
   {
     id: '3',
@@ -36,6 +40,8 @@ export const TRIP_BUDDY_MATES: Mate[] = [
     sub: '사진 찍는 여행을 좋아해요',
     isActive: false,
     updatedAt: null,
+    travelTypeCode: 'SRLI',
+    travelTags: ['사진', '문화', '여유'],
   },
   {
     id: '4',
@@ -48,6 +54,8 @@ export const TRIP_BUDDY_MATES: Mate[] = [
     sub: '자연 풍경과 조용한 코스를 선호해요',
     isActive: true,
     updatedAt: null,
+    travelTypeCode: 'PAHI',
+    travelTags: ['자연', '탐방', '숨은명소'],
   },
   {
     id: '5',
@@ -60,5 +68,7 @@ export const TRIP_BUDDY_MATES: Mate[] = [
     sub: '전시, 카페, 산책 코스를 좋아해요',
     isActive: false,
     updatedAt: null,
+    travelTypeCode: 'PRHI',
+    travelTags: ['전시', '카페', '골목'],
   },
 ];

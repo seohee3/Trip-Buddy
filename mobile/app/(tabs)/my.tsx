@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/context/AuthContext';
 import { useTravelData } from '@/src/context/TravelDataContext';
+import { useTravelType } from '@/src/context/TravelTypeContext';
 import { AuthActionError } from '@/src/firebase/authErrors';
 import type { TravelRecord } from '@/src/types/travel';
 import {
@@ -16,6 +17,7 @@ import {
 export default function MyScreen() {
   const { logout, isSubmitting } = useAuth();
   const { profile, records, isLoading, deleteRecord } = useTravelData();
+  const { travelType } = useTravelType();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [favoritePlaces, setFavoritePlaces] = useState<FavoritePlace[]>([]);
@@ -165,6 +167,25 @@ export default function MyScreen() {
           <StatItem value={favoritePlaces.length} label="찜한 장소" />
         </View>
 
+        {travelType ? (
+          <View style={styles.travelTypeCard}>
+            <Text style={styles.travelTypeEyebrow}>나의 여행유형</Text>
+            <View style={styles.travelTypeTitleRow}>
+              <Text style={styles.travelTypeName}>{travelType.name}</Text>
+              <Text style={styles.travelTypeCode}>{travelType.code}</Text>
+            </View>
+            <Text style={styles.travelTypeSummary}>{travelType.summary}</Text>
+            <View style={styles.travelTypeActions}>
+              <Pressable style={({ pressed }) => [styles.travelTypeButton, pressed && styles.pressed]} onPress={() => router.push('/travel-type-result')} accessibilityRole="button" accessibilityLabel="여행유형 결과 다시 보기">
+                <Text style={styles.travelTypeButtonText}>결과 다시 보기</Text>
+              </Pressable>
+              <Pressable style={({ pressed }) => [styles.travelTypeButton, styles.travelTypeRetakeButton, pressed && styles.pressed]} onPress={() => router.push('/travel-survey')} accessibilityRole="button" accessibilityLabel="여행유형 다시 검사하기">
+                <Text style={[styles.travelTypeButtonText, styles.travelTypeRetakeText]}>다시 검사하기</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.menuGrid}>
           <ActionButton
             label="여행 지도"
@@ -290,7 +311,13 @@ function FavoritePlaceCard({
         style={({ pressed }) => [styles.favoriteBody, pressed && styles.pressed]}
         onPress={onPress}
       >
-        <Image source={{ uri: place.image }} style={styles.favoriteImage} />
+        {place.image ? (
+          <Image source={{ uri: place.image }} style={styles.favoriteImage} />
+        ) : (
+          <View style={[styles.favoriteImage, styles.favoriteNoImage]}>
+            <Text style={styles.favoriteNoImageText}>이미지 없음</Text>
+          </View>
+        )}
 
         <View style={styles.favoriteInfo}>
           <Text style={styles.favoriteCategory}>{place.category}</Text>
@@ -599,6 +626,76 @@ const styles = StyleSheet.create({
     color: '#D9534F',
     fontSize: 10,
     fontWeight: '700',
+  },
+  favoriteNoImage: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  favoriteNoImageText: {
+    color: '#999999',
+    fontSize: 9,
+  },
+  travelTypeCard: {
+    marginTop: 18,
+    padding: 18,
+    borderRadius: 20,
+    backgroundColor: '#5C3DFF',
+  },
+  travelTypeEyebrow: {
+    color: 'rgba(255,255,255,0.76)',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  travelTypeTitleRow: {
+    marginTop: 7,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  travelTypeName: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 19,
+    fontWeight: '900',
+  },
+  travelTypeCode: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+  travelTypeSummary: {
+    marginTop: 8,
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  travelTypeActions: {
+    marginTop: 14,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  travelTypeButton: {
+    flex: 1,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  travelTypeRetakeButton: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.65)',
+    backgroundColor: 'transparent',
+  },
+  travelTypeButtonText: {
+    color: '#5C3DFF',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  travelTypeRetakeText: {
+    color: '#FFFFFF',
   },
   logoutButton: {
     minHeight: 48,

@@ -1,3 +1,5 @@
+import type { TravelAxis, TravelPole, TravelTypeCode } from '@/src/travel-type/model';
+
 export type Mate = {
   id: string;
   name: string;
@@ -8,4 +10,7 @@ export type Mate = {
   sub: string;
   isActive: boolean;
   updatedAt: string | null;
+  travelTypeCode?: TravelTypeCode;
+  travelTags?: string[];
+  axisPreferences?: Partial<Record<TravelAxis, TravelPole>>;
 };
