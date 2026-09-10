@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -13,11 +13,17 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type ChatMessage = {
-  id: number;
-  sender: 'mate' | 'me';
-  text: string;
-};
+import { useAuth } from '@/src/context/AuthContext';
+import { openMateChat, sendChatMessage, subscribeChat, type ChatMessage } from '@/src/firebase/chatRepository';
+
+function chatError(error: unknown) {
+  if (error && typeof error === 'object' && 'code' in error) {
+    return error.code === 'permission-denied'
+      ? '채팅 권한이 없어요. 계정 프로필과 채팅 서비스 설정을 확인해주세요.'
+      : '채팅 서버에 연결하지 못했어요. 네트워크를 확인하고 다시 시도해주세요.';
+  }
+  return error instanceof Error ? error.message : '채팅을 불러오지 못했어요.';
+}
 
 const COLORS = {
   primary: '#5C3DFF',
@@ -42,41 +48,76 @@ export default function MateChatScreen() {
     params.image ??
     'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80';
 
+  const { user } = useAuth();
+  const mateId = typeof params.id === 'string' ? params.id : '';
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 1,
-      sender: 'mate',
-      text: '안녕하세요! 여행 메이트 신청 보고 연락드려요.',
-    },
-    {
-      id: 2,
-      sender: 'me',
-      text: '안녕하세요! 일정이 비슷해서 같이 이야기해보고 싶었어요.',
-    },
-    {
-      id: 3,
-      sender: 'mate',
-      text: '좋아요. 저는 카페랑 야경 코스 좋아해요!',
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const sendingRef = useRef(false);
 
-  const sendMessage = () => {
-    const text = input.trim();
-
-    if (!text) {
-      return;
+  useEffect(() => {
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    setMessages([]);
+    setRoomId(null);
+    setError('');
+    setIsLoading(true);
+    const timeout = setTimeout(() => {
+      if (active) {
+        setIsLoading(false);
+        setError('연결이 지연되고 있어요. 네트워크를 확인하고 다시 시도해주세요.');
+      }
+    }, 15000);
+    const fail = (reason: unknown) => {
+      if (!active) return;
+      clearTimeout(timeout);
+      setIsLoading(false);
+      setRoomId(null);
+      setError(chatError(reason));
+    };
+    if (!user) {
+      fail(new Error('로그인 후 채팅을 이용해주세요.'));
+    } else {
+      void openMateChat(user.uid, mateId).then((id) => {
+        if (!active) return;
+        unsubscribe = subscribeChat(id, (nextMessages) => {
+          if (!active) return;
+          clearTimeout(timeout);
+          setMessages(nextMessages);
+          setRoomId(id);
+          setIsLoading(false);
+          setError('');
+        }, fail);
+      }).catch(fail);
     }
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+      unsubscribe?.();
+    };
+  }, [mateId, retry, user]);
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        sender: 'me',
-        text,
-      },
-    ]);
+  const sendMessage = async () => {
+    const text = input.trim();
+    if (!text || !roomId || !user || sendingRef.current) return;
+    sendingRef.current = true;
+    setIsSending(true);
+    setError('');
     setInput('');
+    try {
+      await sendChatMessage(roomId, user.uid, text);
+    } catch (reason) {
+      setInput(text);
+      setError(chatError(reason));
+    } finally {
+      sendingRef.current = false;
+      setIsSending(false);
+    }
   };
 
   const startCompanion = () => {
@@ -91,7 +132,7 @@ export default function MateChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -115,6 +156,9 @@ export default function MateChatScreen() {
         </View>
 
         <ScrollView
+          ref={scrollRef}
+          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+          keyboardShouldPersistTaps="handled"
           style={styles.chatBody}
           contentContainerStyle={styles.chatContent}
           showsVerticalScrollIndicator={false}
@@ -125,8 +169,12 @@ export default function MateChatScreen() {
             </Text>
           </View>
 
+          {isLoading ? <Text style={styles.noticeText}>대화를 불러오는 중이에요…</Text> : null}
+          {!isLoading && !error && messages.length === 0 ? (
+            <Text style={styles.noticeText}>첫 메시지로 여행 이야기를 시작해보세요.</Text>
+          ) : null}
           {messages.map((message) => {
-            const isMe = message.sender === 'me';
+            const isMe = message.senderId === user?.uid;
 
             return (
               <View
@@ -138,6 +186,7 @@ export default function MateChatScreen() {
                 <View style={[styles.bubble, isMe ? styles.myBubble : styles.mateBubble]}>
                   <Text style={[styles.messageText, isMe && styles.myMessageText]}>
                     {message.text}
+                    {message.pending ? ' (전송 중…)' : ''}
                   </Text>
                 </View>
               </View>
@@ -145,8 +194,20 @@ export default function MateChatScreen() {
           })}
         </ScrollView>
 
+        {error ? (
+          <View style={styles.notice}>
+            <Text accessibilityRole="alert" style={styles.noticeText}>{error}</Text>
+            {!roomId ? (
+              <Pressable onPress={() => setRetry((value) => value + 1)} accessibilityRole="button">
+                <Text style={styles.noticeText}>다시 시도</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
         <View style={styles.inputArea}>
           <TextInput
+            editable={Boolean(roomId) && !isSending}
+            maxLength={2000}
             value={input}
             onChangeText={setInput}
             placeholder="메시지를 입력하세요"
@@ -155,8 +216,8 @@ export default function MateChatScreen() {
             returnKeyType="send"
             onSubmitEditing={sendMessage}
           />
-          <Pressable style={styles.sendButton} onPress={sendMessage}>
-            <Text style={styles.sendButtonText}>전송</Text>
+          <Pressable style={[styles.sendButton, (!roomId || isSending || !input.trim()) && { opacity: 0.45 }]} disabled={!roomId || isSending || !input.trim()} onPress={sendMessage}>
+            <Text style={styles.sendButtonText}>{isSending ? '전송 중' : '전송'}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

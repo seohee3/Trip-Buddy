@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { REGIONS, findRegionSelection, getFullRegionName } from '@/src/data/regions';
 import { useTravelData } from '@/src/context/TravelDataContext';
-import { getRecordRegionName, getRegionRecords, getVisitedRegions } from '@/src/utils/travel';
+import { getRecordRegionName, getVisitedRegions } from '@/src/utils/travel';
 import type { TravelRecord } from '@/src/types/travel';
 
 export default function TravelMapScreen() {

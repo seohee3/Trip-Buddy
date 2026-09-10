@@ -6,6 +6,7 @@ Cloud Firestore의 `(default)` 데이터베이스에서 `mates` 컬렉션을 만
 
 | 필드 | Firestore 타입 | 앱에서의 용도 |
 | --- | --- | --- |
+| `userId` | string (채팅 시 필수) | 실제 Firebase Authentication UID. 숫자 메이트 문서 ID·이메일과 다름. 연결 계정의 users/{UID} 프로필 필요 |
 | `name` | string | 목록 카드 이름, 상세·채팅·동행 화면의 이름 route param |
 | `age` | number | 목록 카드와 상세 화면의 `N세` 표시 |
 | `region` | string | 목록 카드와 상세 화면의 지역 표시 |
@@ -26,6 +27,7 @@ Cloud Firestore의 `(default)` 데이터베이스에서 `mates` 컬렉션을 만
 
 | 필드 | 타입 | 값 |
 | --- | --- | --- |
+| `userId` | string (채팅 시 필수) | 실제 Firebase Authentication UID. 숫자 메이트 문서 ID·이메일과 다름. 연결 계정의 users/{UID} 프로필 필요 |
 | `name` | string | `여행자_가람` |
 | `age` | number | `28` |
 | `region` | string | `서울` |
@@ -41,6 +43,7 @@ Cloud Firestore의 `(default)` 데이터베이스에서 `mates` 컬렉션을 만
 
 | 필드 | 타입 | 값 |
 | --- | --- | --- |
+| `userId` | string (채팅 시 필수) | 실제 Firebase Authentication UID. 숫자 메이트 문서 ID·이메일과 다름. 연결 계정의 users/{UID} 프로필 필요 |
 | `name` | string | `여행러_민수` |
 | `age` | number | `30` |
 | `region` | string | `서울` |
@@ -56,6 +59,7 @@ Cloud Firestore의 `(default)` 데이터베이스에서 `mates` 컬렉션을 만
 
 | 필드 | 타입 | 값 |
 | --- | --- | --- |
+| `userId` | string (채팅 시 필수) | 실제 Firebase Authentication UID. 숫자 메이트 문서 ID·이메일과 다름. 연결 계정의 users/{UID} 프로필 필요 |
 | `name` | string | `트립메이트_지은` |
 | `age` | number | `26` |
 | `region` | string | `서울` |
@@ -71,6 +75,7 @@ Cloud Firestore의 `(default)` 데이터베이스에서 `mates` 컬렉션을 만
 
 | 필드 | 타입 | 값 |
 | --- | --- | --- |
+| `userId` | string (채팅 시 필수) | 실제 Firebase Authentication UID. 숫자 메이트 문서 ID·이메일과 다름. 연결 계정의 users/{UID} 프로필 필요 |
 | `name` | string | `여행하는_준호` |
 | `age` | number | `29` |
 | `region` | string | `서울` |
@@ -86,6 +91,7 @@ Cloud Firestore의 `(default)` 데이터베이스에서 `mates` 컬렉션을 만
 
 | 필드 | 타입 | 값 |
 | --- | --- | --- |
+| `userId` | string (채팅 시 필수) | 실제 Firebase Authentication UID. 숫자 메이트 문서 ID·이메일과 다름. 연결 계정의 users/{UID} 프로필 필요 |
 | `name` | string | `트래블러_소희` |
 | `age` | number | `27` |
 | `region` | string | `서울` |

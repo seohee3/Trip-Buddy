@@ -124,7 +124,7 @@ export default function MateDetailScreen() {
         </View>
 
         <Pressable style={styles.chatButton} onPress={goChat}>
-          <Text style={styles.chatButtonText}>메시지 보내기</Text>
+          <Text style={styles.chatButtonText}>채팅하기</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
