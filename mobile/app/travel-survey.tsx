@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/context/AuthContext';
@@ -21,6 +21,8 @@ import { TRAVEL_SURVEY_QUESTIONS } from '@/src/travel-type/questions';
 const PRIMARY = '#5C3DFF';
 
 export default function TravelSurveyScreen() {
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const isRetake = mode === 'retake';
   const { user, logout, isSubmitting } = useAuth();
   const { onboardingCompleted, completeSurvey, isSavingTravelType } = useTravelType();
   const [answers, setAnswers] = useState<Partial<TravelSurveyAnswers>>({});
@@ -100,6 +102,9 @@ export default function TravelSurveyScreen() {
       { text: '로그아웃', style: 'destructive', onPress: () => void logout() },
     ]);
   };
+  if (onboardingCompleted && !isRetake) {
+    return <Redirect href="/(tabs)" />;
+  }
 
   if (!isDraftReady) {
     return (

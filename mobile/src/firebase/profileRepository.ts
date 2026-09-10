@@ -62,7 +62,9 @@ function addRequiredAccountFields(
   if (!data || data.email !== normalizedUserEmail(user)) {
     payload.email = normalizedUserEmail(user);
   }
-  if (!data || typeof data.onboardingCompleted !== 'boolean') {
+  if (data?.onboardingComplete === true && data.onboardingCompleted !== true) {
+    payload.onboardingCompleted = true;
+  } else if (!data || typeof data.onboardingCompleted !== 'boolean') {
     payload.onboardingCompleted = false;
   }
   if (!data || !hasField(data, 'travelType')) {

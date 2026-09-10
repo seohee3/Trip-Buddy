@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -104,26 +104,37 @@ export default function MyScreen() {
     ]);
   };
 
+  const performLogout = async () => {
+  try {
+    await logout();
+  } catch (error) {
+    Alert.alert(
+      '로그아웃 실패',
+      error instanceof AuthActionError
+        ? error.message
+        : '로그아웃하지 못했습니다. 다시 시도해주세요.',
+    );
+  }
+};
+
   const confirmLogout = () => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Trip-Buddy에서 로그아웃할까요?');
+      if (confirmed) {
+        void performLogout();
+      }
+      return;
+    }
+
     Alert.alert('로그아웃', 'Trip-Buddy에서 로그아웃할까요?', [
       { text: '취소', style: 'cancel' },
       {
         text: '로그아웃',
         style: 'destructive',
-        onPress: async () => {
-          try {
-            await logout();
-          } catch (error) {
-            Alert.alert(
-              '로그아웃 실패',
-              error instanceof AuthActionError
-                ? error.message
-                : '로그아웃하지 못했습니다. 다시 시도해주세요.',
-            );
-          }
-        },
+        onPress: () => void performLogout(),
       },
-    ]);
+    ],
+  );
   };
 
   if (isLoading) {
@@ -179,7 +190,12 @@ export default function MyScreen() {
               <Pressable style={({ pressed }) => [styles.travelTypeButton, pressed && styles.pressed]} onPress={() => router.push('/travel-type-result')} accessibilityRole="button" accessibilityLabel="여행유형 결과 다시 보기">
                 <Text style={styles.travelTypeButtonText}>결과 다시 보기</Text>
               </Pressable>
-              <Pressable style={({ pressed }) => [styles.travelTypeButton, styles.travelTypeRetakeButton, pressed && styles.pressed]} onPress={() => router.push('/travel-survey')} accessibilityRole="button" accessibilityLabel="여행유형 다시 검사하기">
+              <Pressable style={({ pressed }) => [styles.travelTypeButton, styles.travelTypeRetakeButton, pressed && styles.pressed]} onPress={() =>
+  router.push({
+    pathname: '/travel-survey',
+    params: { mode: 'retake' },
+  })
+} accessibilityRole="button" accessibilityLabel="여행유형 다시 검사하기">
                 <Text style={[styles.travelTypeButtonText, styles.travelTypeRetakeText]}>다시 검사하기</Text>
               </Pressable>
             </View>

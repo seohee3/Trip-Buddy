@@ -16,8 +16,13 @@ export async function fetchRemoteTravelTypeState(uid: string): Promise<RemoteTra
 
   const data = snapshot.data();
   const travelType = normalizeTravelTypeResult(data.travelType);
+
+  const onboardingCompleted =
+    data.onboardingCompleted === true ||
+    data.onboardingComplete === true;
+
   return {
-    onboardingCompleted: data.onboardingCompleted === true && Boolean(travelType),
+    onboardingCompleted,
     travelType,
   };
 }
