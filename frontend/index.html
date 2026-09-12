@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trip Buddy</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <section id="home" class="screen active">
+      <header class="home-feed-header">
+        <div>
+          <h2>Travel Mate</h2>
+          <p id="homeGreeting">나만의 여행을 기록해보세요</p>
+        </div>
+        <div class="home-icons">
+          <button type="button">🔔</button>
+          <button type="button">✈️</button>
+        </div>
+      </header>
+
+      <div class="home-profile-card">
+        <div id="homeAvatar" class="home-profile-avatar">🐶</div>
+        <div>
+          <strong id="homeProfileName">닉네임을 설정해보세요</strong>
+          <p id="homeProfileBio">여행 프로필을 작성해보세요.</p>
+        </div>
+      </div>
+
+      <section class="home-feed-section">
+        <div class="home-section-title">
+          <h3>최근 여행 기록</h3>
+          <button id="homeGoMyBtn" type="button">전체보기</button>
+        </div>
+        <div id="homeRecentRecords" class="home-feed-list"></div>
+      </section>
+
+      <section class="home-feed-section">
+        <h3>나의 여행 현황</h3>
+        <div class="home-status-card">
+          <div>
+            <strong id="homeRecordCount">0</strong>
+            <span>기록</span>
+          </div>
+          <div>
+            <strong id="homeVisitedRegionCount">0</strong>
+            <span>방문 지역</span>
+          </div>
+          <div>
+            <strong id="homeMascotCount">0</strong>
+            <span>마스코트</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="home-feed-section">
+        <h3>추천 바로가기</h3>
+        <div class="home-menu-list">
+          <button id="homeGoNearbyBtn" type="button">📍 주변 관광지 둘러보기</button>
+          <button id="homeGoRecordBtn" type="button">✍ 여행 기록 남기기</button>
+          <button id="homeGoMapBtn" type="button">🗺 나의 여행 지도 보기</button>
+          <button id="homeGoMascotBtn" type="button">🎒 마스코트 도감 보기</button>
+        </div>
+      </section>
+    </section>
+
+    <section id="nearby" class="screen">
+      <div class="top-bar">
+        <select id="regionSelect">
+          <option>서울특별시</option>
+          <option>부산광역시</option>
+          <option>제주특별자치도</option>
+        </select>
+      </div>
+
+      <h2>주변</h2>
+
+      <div class="tabs">
+        <button class="tab active">추천순</button>
+        <button class="tab">거리순</button>
+        <button class="tab">인기순</button>
+      </div>
+
+      <div class="search-row">
+        <span>현재 위치 기준 3km 이내</span>
+        <button id="locationBtn" type="button">검색 🔍</button>
+      </div>
+
+      <div id="locationInfo">
+        <div class="keyword-search">
+          <input id="nearbyKeywordInput" placeholder="장소명을 검색해보세요" />
+          <button id="nearbyKeywordBtn" type="button">검색</button>
+        </div>
+        현재 위치 정보가 표시됩니다.
+      </div>
+
+      <div id="kakaoMap" class="map-box"></div>
+
+      <div class="place-list">
+        <p class="empty-text">현재 위치를 불러오는 중입니다.</p>
+      </div>
+    </section>
+
+    <section id="placeDetail" class="screen">
+      <header class="profile-header">
+        <button id="backToNearby" class="back-btn" type="button">←</button>
+        <h2>관광지 상세</h2>
+      </header>
+
+      <div id="detailImage" class="detail-image"></div>
+
+      <div class="detail-card">
+        <h3 id="detailTitle">관광지 이름</h3>
+        <p id="detailAddress">주소 정보</p>
+        <span id="detailDistance">거리 정보</span>
+        <button id="favoritePlaceBtn" class="favorite-btn" type="button">♡ 찜하기</button>
+        <button id="writeRecordFromPlaceBtn" class="write-record-btn" type="button">
+          ✈ 여행 기록 작성
+        </button>
+
+        <div class="detail-info">
+          <strong>소개</strong>
+          <p id="detailDescription">
+            현재 위치 기준 주변 관광지 정보입니다.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="my" class="screen">
+      <header class="profile-header">
+        <h2>마이페이지</h2>
+      </header>
+
+      <div class="profile">
+        <div id="profileAvatar" class="avatar">🐶</div>
+        <div>
+          <h3 id="profileName">모리토리</h3>
+          <p id="profileBio">여행을 좋아하는 모리토리</p>
+        </div>
+      </div>
+
+      <div class="profile-buttons">
+        <button id="openProfileEditBtn" type="button">프로필 편집</button>
+        <button id="openRecordForm" type="button">+ 여행 기록 추가</button>
+      </div>
+
+      <div class="stats">
+        <div>
+          <strong id="postCount">0</strong>
+          <span>게시물</span>
+        </div>
+
+        <div>
+          <strong id="mateCount">0</strong>
+          <span>동행</span>
+        </div>
+
+        <div>
+          <strong id="placeCount">0</strong>
+          <span>방문 장소</span>
+        </div>
+      </div>
+
+      <div class="menu-grid">
+        <button id="openTravelMapBtn" type="button">여행 지도</button>
+        <button id="openMascotBookBtn" type="button">마스코트 도감</button>
+      </div>
+
+      <h3 class="section-title">찜한 관광지</h3>
+      <div id="favoritePlaceList" class="record-list"></div>
+
+      <h3 class="section-title">나의 여행 기록</h3>
+      <div id="recordList" class="record-grid"></div>
+    </section>
+
+    <section id="profileEdit" class="screen">
+      <header class="profile-header">
+        <button id="backToMyFromProfileEdit" class="back-btn" type="button">←</button>
+        <h2>프로필 편집</h2>
+        <button id="saveProfileBtn" class="save-btn" type="button">완료</button>
+      </header>
+
+      <div class="form-card">
+        <label>프로필 사진</label>
+
+        <div class="profile-edit-photo">
+          <label id="profileImagePreview" class="profile-image-preview" for="profileImageInput">
+            🐶
+          </label>
+
+          <input
+            type="file"
+            id="profileImageInput"
+            accept="image/*"
+            hidden
+          />
+        </div>
+
+        <label>닉네임</label>
+        <input id="profileNameInput" class="text-input" placeholder="닉네임을 입력하세요" />
+
+        <label>소개글</label>
+        <textarea id="profileBioInput" placeholder="소개글을 입력하세요"></textarea>
+      </div>
+    </section>
+
+    <section id="record" class="screen">
+      <header class="profile-header">
+        <button id="backToMy" class="back-btn" type="button">←</button>
+        <h2>여행 기록</h2>
+        <button id="saveRecordBtn" class="save-btn" type="button">완료</button>
+      </header>
+
+      <div class="form-card">
+        <label>방문 지역</label>
+        <select id="recordRegion" class="text-input">
+          <option>서울특별시</option>
+          <option>경기도</option>
+          <option>부산광역시</option>
+          <option>제주특별자치도</option>
+          <option>강원특별자치도</option>
+          <option>충청북도</option>
+          <option>충청남도</option>
+          <option>전라북도</option>
+          <option>전라남도</option>
+          <option>경상북도</option>
+          <option>경상남도</option>
+          <option>대구광역시</option>
+          <option>광주광역시</option>
+          <option>인천광역시</option>
+        </select>
+
+        <label>방문 일정</label>
+        <button id="openCalendar" class="date-btn" type="button">
+          <span id="selectedDateText">2026.05.20 ~ 2026.05.25</span>
+        </button>
+
+        <label>사진 추가</label>
+        <div class="upload-row">
+          <label class="upload-photo" for="recordImageInput">
+            <span>사진 선택</span>
+          </label>
+
+          <input
+            type="file"
+            id="recordImageInput"
+            accept="image/*"
+            multiple
+            hidden
+          />
+
+          <div id="imagePreview" class="image-preview">
+            미리보기
+          </div>
+        </div>
+
+        <label>글 작성</label>
+        <label>여행 제목</label>
+        <input id="recordTitle" class="text-input" placeholder="예: 제주도 여행" />
+        <textarea id="recordContent" placeholder="오늘의 여행 기록을 남겨보세요."></textarea>
+
+        <label>공개 설정</label>
+        <div class="radio-box selected">현재 공개</div>
+        <div class="radio-box">나만 보기</div>
+      </div>
+    </section>
+
+    <section id="recordDetail" class="screen">
+      <header class="profile-header">
+        <button id="backToMyFromRecordDetail" class="back-btn" type="button">←</button>
+        <h2>여행 기록 상세</h2>
+      </header>
+
+      <div id="recordDetailImage" class="detail-image"></div>
+      <div id="recordDetailImages" class="record-detail-images"></div>
+
+      <div class="detail-card">
+        <h3 id="recordDetailTitle">여행 제목</h3>
+        <span id="recordDetailDate">여행 날짜</span>
+        <p id="recordDetailRegion">방문 지역</p>
+
+        <div class="detail-info">
+          <strong>기록</strong>
+          <p id="recordDetailContent">여행 내용</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="travelMap" class="screen">
+      <header class="travel-map-header">
+        <button id="backToMyFromTravelMap" class="back-btn" type="button">←</button>
+        <h2>여행 지도</h2>
+        <span class="travel-map-brand">Travel Mate</span>
+      </header>
+
+      <section class="travel-map-hero card">
+        <div class="travel-map-svg-wrap">
+          <div id="koreaSvgMap" class="korea-svg-map">
+            <p class="loading-text">대한민국 지도를 불러오는 중입니다.</p>
+          </div>
+        </div>
+
+        <div class="travel-map-status">
+          <h3>나의 방문 현황</h3>
+          <p>
+            방문 지역
+            <strong id="travelMapVisitedCount">0 / 17</strong>
+          </p>
+        </div>
+
+        <div class="travel-map-legend">
+          <div>
+            <i class="legend-color legend-level-0"></i>
+            <span>0회</span>
+          </div>
+          <div>
+            <i class="legend-color legend-level-1"></i>
+            <span>1회</span>
+          </div>
+          <div>
+            <i class="legend-color legend-level-2"></i>
+            <span>2~3회</span>
+          </div>
+          <div>
+            <i class="legend-color legend-level-3"></i>
+            <span>4회 이상</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="travelRegionDetail" class="travel-region-detail card" hidden>
+        <div class="travel-region-detail-header">
+          <div>
+            <span class="travel-region-detail-label">선택한 지역</span>
+            <h3 id="travelRegionDetailName">지역명</h3>
+          </div>
+
+          <button
+            id="closeTravelRegionDetail"
+            class="travel-region-detail-close"
+            type="button"
+            aria-label="지역 정보 닫기"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="travel-region-detail-stats">
+          <div>
+            <span>방문 횟수</span>
+            <strong id="travelRegionDetailCount">0회</strong>
+          </div>
+
+          <div>
+            <span>최근 방문</span>
+            <strong id="travelRegionDetailDate">기록 없음</strong>
+          </div>
+        </div>
+
+        <div id="travelRegionDetailRecords" class="travel-region-detail-records">
+          <p class="empty-text">이 지역의 여행 기록이 없습니다.</p>
+        </div>
+      </section>
+
+      <section class="travel-summary-section">
+        <h3 class="travel-section-title">여행 통계</h3>
+
+        <div class="travel-summary-grid">
+          <article class="travel-summary-card card">
+            <span class="travel-summary-icon">🧳</span>
+            <div>
+              <span>총 여행</span>
+              <strong id="travelMapTotalCount">0</strong>
+              <small>기록한 여행의 총 횟수</small>
+            </div>
+          </article>
+
+          <article class="travel-summary-card card">
+            <span class="travel-summary-icon">📍</span>
+            <div>
+              <span>방문 지역</span>
+              <strong id="travelMapRegionCount">0</strong>
+              <small>방문한 지역 수</small>
+            </div>
+          </article>
+
+          <article class="travel-summary-card card">
+            <span class="travel-summary-icon">📅</span>
+            <div>
+              <span>최근 방문</span>
+              <strong id="travelMapRecentRegion">없음</strong>
+              <small id="travelMapRecentDate">기록 없음</small>
+            </div>
+          </article>
+
+          <article class="travel-summary-card card">
+            <span class="travel-summary-icon">🏆</span>
+            <div>
+              <span>최다 방문</span>
+              <strong id="travelMapTopRegion">없음</strong>
+              <small id="travelMapTopCount">0회 방문</small>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="travel-top-section card">
+        <h3 class="travel-section-title">TOP 3 지역</h3>
+        <div id="travelMapTopThree" class="travel-top-three">
+          <p class="empty-text">아직 방문 기록이 없습니다.</p>
+        </div>
+      </section>
+
+      <section class="travel-region-section card">
+        <div class="travel-region-header">
+          <h3 class="travel-section-title">방문 지역 목록</h3>
+          <span>방문 횟수 순</span>
+        </div>
+
+        <div id="travelMapRegionList" class="travel-region-list">
+          <p class="empty-text">아직 방문 기록이 없습니다.</p>
+        </div>
+      </section>
+    </section>
+
+    <section id="mascotBook" class="screen">
+      <header class="profile-header">
+        <button id="backToMyFromMascotBook" class="back-btn" type="button">←</button>
+        <h2>마스코트 도감</h2>
+      </header>
+
+      <section class="mascot-progress-card">
+        <div class="mascot-progress-header">
+          <div>
+            <span>수집 진행률</span>
+            <strong>
+              <b id="mascotUnlockedCount">0</b>
+              /
+              <b id="mascotTotalCount">17</b>
+            </strong>
+          </div>
+
+          <span id="mascotProgressPercent">0%</span>
+        </div>
+
+        <div class="mascot-progress-bar">
+          <span id="mascotProgressFill"></span>
+        </div>
+
+        <p id="mascotProgressMessage">
+          여행 기록을 남기면 지역 마스코트가 해금돼요.
+        </p>
+      </section>
+
+      <div id="mascotGrid" class="mascot-grid"></div>
+    </section>
+
+    <section id="calendar" class="screen">
+      <header class="profile-header">
+        <button id="backToRecord" class="back-btn" type="button">←</button>
+        <h2>방문 일정</h2>
+        <button id="calendarDoneBtn" class="save-btn" type="button">완료</button>
+      </header>
+
+      <div class="calendar-card">
+        <div class="date-range">
+          <div>
+            <span>시작일</span>
+            <strong id="startDateText">선택 전</strong>
+          </div>
+          <div>
+            <span>종료일</span>
+            <strong id="endDateText">선택 전</strong>
+          </div>
+        </div>
+
+        <div id="yearCalendar" class="year-calendar"></div>
+
+        <button id="calendarSaveBtn" class="submit-btn" type="button">저장하기</button>
+      </div>
+    </section>
+
+    <section id="mate" class="screen">
+      <header class="mate-top">
+        <h2>메이트</h2>
+        <p>나와 잘 맞는 여행 메이트를 만나보세요!</p>
+      </header>
+
+      <div id="mateList" class="mate-list"></div>
+    </section>
+
+    <section id="mateProfile" class="screen">
+      <header class="mate-profile-top">
+        <button id="backToMateList" class="back-btn" type="button">←</button>
+        <div>
+          <h2 id="mateProfileName">토리토리</h2>
+          <p id="mateProfileSub">여행을 좋아하는 모리</p>
+        </div>
+      </header>
+
+      <section class="mate-profile-main">
+        <img id="mateProfileImage" class="mate-profile-photo" src="" alt="프로필 사진" />
+
+        <button id="goChatBtn" class="profile-message-btn" type="button">
+          💬 메시지 보내기
+        </button>
+      </section>
+
+      <section class="mate-shortcut-row">
+        <button type="button">
+          <span>🗺</span>
+          여행 지도
+          <small>내가 기록한 여행지</small>
+        </button>
+
+        <button type="button">
+          <span>🐻</span>
+          마스코트 도감
+          <small>지역 마스코트 모으기</small>
+        </button>
+      </section>
+
+      <section id="matePhotoGrid" class="mate-photo-grid"></section>
+    </section>
+
+    <section id="mateChat" class="screen">
+      <header class="chat-header">
+        <button id="backToMateProfileFromChat" class="back-btn" type="button">←</button>
+
+        <div class="chat-user-info">
+          <img id="chatUserImg" src="" alt="상대 프로필" />
+          <div>
+            <h3 id="chatUserName">여행자</h3>
+            <p id="chatUserSub">서울 · 28세</p>
+          </div>
+        </div>
+
+        <button id="startCompanionFromChatBtn" class="chat-start-btn" type="button">
+          동행 시작
+        </button>
+
+        <button class="chat-icon-btn" type="button">☎</button>
+        <button class="chat-icon-btn" type="button">⋮</button>
+      </header>
+
+      <div class="chat-notice">
+        안전한 대화를 위해 개인정보 공유를 주의해주세요.
+        <button type="button">×</button>
+      </div>
+
+      <main id="chatMessages" class="chat-body"></main>
+
+      <div class="chat-bottom">
+        <button type="button" class="chat-plus-btn">＋</button>
+        <input id="chatInput" placeholder="메시지 남기기" />
+        <button id="sendChatBtn" type="button">➤</button>
+      </div>
+    </section>
+
+    <section id="companion" class="screen">
+      <header class="companion-header">
+        <h2>안심 동행 중</h2>
+        <strong id="companionTime">00:00:00</strong>
+        <p>동행 시간</p>
+      </header>
+
+      <section class="companion-map">
+        <div class="map-path"></div>
+        <div class="my-dot"></div>
+        <div class="pin pin-1">📍</div>
+        <div class="pin pin-2">📍</div>
+        <div class="pin pin-3">📍</div>
+      </section>
+
+      <section class="companion-card">
+        <h3>동행자</h3>
+
+        <div class="companion-user">
+          <img id="companionUserImg" src="" alt="동행자 프로필" />
+          <div>
+            <strong id="companionUserName">여행러버_민경</strong>
+            <p id="companionUserSub">서울 · 26세</p>
+          </div>
+        </div>
+
+        <div class="companion-buttons">
+          <button id="endCompanionBtn" type="button">동행 종료</button>
+          <button type="button">비상 연락</button>
+        </div>
+      </section>
+    </section>
+
+    <nav class="bottom-nav">
+      <button class="nav-active" data-target="home" type="button">홈</button>
+      <button type="button" onclick="location.href='search.html'">검색</button>
+      <button data-target="nearby" type="button">주변</button>
+      <button data-target="mate" type="button">메이트</button>
+      <button data-target="my" type="button">MY</button>
+    </nav>
+  </div>
+
+  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=59866cac221d712a98ca8fd1bde44e62&libraries=services"></script>
+  <script src="src/region.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const screen = params.get("screen");
+
+      if (!screen) return;
+
+      const targetButton = document.querySelector(
+        `.bottom-nav button[data-target="${screen}"]`
+      );
+
+      if (targetButton) {
+        targetButton.click();
+      }
+
+      window.history.replaceState(null, "", "index.html");
+    });
+  </script>
+</body>
+</html>
