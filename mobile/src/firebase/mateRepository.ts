@@ -100,6 +100,7 @@ export async function fetchMatesFromFirestore(uid: string): Promise<Mate[]> {
   const snapshot = await getDocs(collection(firestore, 'mates'));
 
   return snapshot.docs
+    .filter((mateDocument) => mateDocument.data().userId !== uid)
     .map((mateDocument) => normalizeMateDocument(mateDocument.id, mateDocument.data()))
     .sort((left, right) => right.match - left.match);
 }
