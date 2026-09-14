@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   Modal,
@@ -14,6 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { RegionMascot } from '@/src/components/mascot/RegionMascot';
 import { useTravelData } from '@/src/context/TravelDataContext';
 import { MASCOTS } from '@/src/data/mascots';
+import { getVisibleMascots, type MascotBookFilter } from '@/src/utils/mascotBookPresentation';
 import { getRegionMascotLook } from '@/src/data/regionMascotThemes';
 import {
   buildMascotCollection,
@@ -23,16 +24,30 @@ import {
 
 const HORIZONTAL_PADDING = 16;
 const COLUMN_GAP = 10;
+const MASCOT_NUMBERS = new Map(MASCOTS.map((mascot, index) => [mascot.id, index + 1]));
+const FILTERS: { key: MascotBookFilter; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'collected', label: '수집 완료' },
+  { key: 'locked', label: '미해금' },
+];
 
 export default function MascotBookScreen() {
   const { records, isLoading } = useTravelData();
+  const listRef = useRef<FlatList<MascotCollectionEntry>>(null);
+  const [filter, setFilter] = useState<MascotBookFilter>('all');
   const { width } = useWindowDimensions();
   const [selectedMascotId, setSelectedMascotId] = useState<string | null>(null);
   const [listWidth, setListWidth] = useState(Math.min(width, 1100));
   const collection = useMemo(() => buildMascotCollection(records, MASCOTS), [records]);
+  const visibleCollection = useMemo(() => getVisibleMascots(collection, filter), [collection, filter]);
   const selectedMascot = collection.find(item => item.id === selectedMascotId) ?? null;
   const unlockedCount = collection.filter((mascot) => mascot.isUnlocked).length;
   const remainingCount = collection.length - unlockedCount;
+  const filterCounts = { all: collection.length, collected: unlockedCount, locked: remainingCount };
+  const changeFilter = (next: MascotBookFilter) => {
+    setFilter(next);
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  };
   const progress = collection.length === 0 ? 0 : Math.round((unlockedCount / collection.length) * 100);
   const numColumns = listWidth >= 960 ? 5 : listWidth >= 720 ? 4 : listWidth >= 520 ? 3 : 2;
   const cardWidth = (listWidth - HORIZONTAL_PADDING * 2 - COLUMN_GAP * (numColumns - 1)) / numColumns;
@@ -49,11 +64,12 @@ export default function MascotBookScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FlatList
+        ref={listRef}
         key={numColumns}
         style={styles.list}
         onLayout={event => setListWidth(event.nativeEvent.layout.width)}
         extraData={selectedMascotId}
-        data={collection}
+        data={visibleCollection}
         keyExtractor={(item) => item.id}
         numColumns={numColumns}
         columnWrapperStyle={styles.gridRow}
@@ -100,17 +116,34 @@ export default function MascotBookScreen() {
               </View>
             </View>
 
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{collection.length} 지역 트립버디</Text>
-              <Text style={styles.sectionHint}>수집 {unlockedCount} · 미해금 {remainingCount}</Text>
+            <View style={styles.filters}>
+              {FILTERS.map(item => (
+                <Pressable key={item.key} accessibilityRole="tab"
+                  accessibilityState={{ selected: filter === item.key }}
+                  accessibilityLabel={item.label + ' ' + filterCounts[item.key] + '개'}
+                  onPress={() => changeFilter(item.key)}
+                  style={({ pressed }) => [styles.filterButton, filter === item.key && styles.filterActive, pressed && styles.filterPressed]}>
+                  <Text style={[styles.filterLabel, filter === item.key && styles.filterLabelActive]}>{item.label}</Text>
+                  <Text style={[styles.filterCount, filter === item.key && styles.filterLabelActive]}>{filterCounts[item.key]}</Text>
+                </Pressable>
+              ))}
             </View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{filter === 'collected' ? '나의 컬렉션' : filter === 'locked' ? '다음 여행의 친구들' : '지역 친구들'}</Text>
+              <Text style={styles.sectionHint} accessibilityLiveRegion="polite">{visibleCollection.length}개 · {filter === 'locked' ? '지역순' : filter === 'collected' ? '최근 획득순' : '수집 완료 먼저'}</Text>
+            </View>
+            <Text style={styles.collectionHint}>{filter === 'locked' ? '지역마다 다른 실루엣 속에서 다음 여행의 단서를 찾아보세요.' : '여행으로 만난 친구들이 앞에 모여 있어요. 최근 획득순으로 살펴보세요.'}</Text>
           </View>
         )}
-        renderItem={({ item, index }) => (
+        ListEmptyComponent={<View style={styles.emptyCollection}>
+          <Text style={styles.emptyCollectionTitle}>{filter === 'collected' ? '첫 지역 친구를 기다리고 있어요' : '모든 지역 친구를 만났어요!'}</Text>
+          <Text style={styles.emptyCollectionText}>{filter === 'collected' ? '여행 기록을 남기면 이곳에 나만의 컬렉션이 채워집니다.' : '수집 완료에서 함께한 친구들을 다시 만나보세요.'}</Text>
+        </View>}
+        renderItem={({ item }) => (
           <MascotCard
             mascot={item}
             width={cardWidth}
-            number={index + 1}
+            number={MASCOT_NUMBERS.get(item.id) ?? 0}
             selected={selectedMascotId === item.id}
             onPress={() => setSelectedMascotId(item.id)}
           />
@@ -123,6 +156,7 @@ export default function MascotBookScreen() {
 }
 
 function MascotCard({ mascot, width, number, selected, onPress }: { mascot: MascotCollectionEntry; width: number; number: number; selected: boolean; onPress: () => void }) {
+  const look = getRegionMascotLook(mascot.areaCode, mascot.sigunguCode, mascot.sigunguName);
   return (
     <Pressable
       onPress={onPress}
@@ -133,24 +167,27 @@ function MascotCard({ mascot, width, number, selected, onPress }: { mascot: Masc
         styles.mascotCard,
         { width },
         mascot.isUnlocked && styles.unlockedCard,
+        mascot.isUnlocked && { borderColor: look.primary },
         selected && styles.selectedCard,
         pressed && styles.pressedCard,
       ]}
     >
       <View style={styles.cardTopRow}>
-        <Text style={[styles.status, mascot.isUnlocked && styles.unlockedStatus]}>
+        <Text style={[styles.status, mascot.isUnlocked && styles.unlockedStatus, mascot.isUnlocked && { backgroundColor: look.pale }]}>
           {mascot.isUnlocked ? '✓ 수집 완료' : '미해금'}
         </Text>
         <Text style={styles.cardCode}>{'No. ' + String(number).padStart(3, '0')}</Text>
       </View>
+      <View style={[styles.mascotStage, { backgroundColor: mascot.isUnlocked ? look.pale : '#EEF1F2' }]}>
       <RegionMascot
         areaCode={mascot.areaCode}
         sigunguCode={mascot.sigunguCode}
         sigunguName={mascot.sigunguName}
         regionName={mascot.regionName}
         unlocked={mascot.isUnlocked}
-        size={Math.min(132, width - 26)}
+        size={Math.min(164, width - 24)}
       />
+      </View>
       <Text style={[styles.regionName, !mascot.isUnlocked && styles.lockedRegionName]} numberOfLines={2}>
         {mascot.regionName}
       </Text>
@@ -278,6 +315,18 @@ const styles = StyleSheet.create({
   list: { width: '100%', maxWidth: 1100, alignSelf: 'center' },
   selectedCard: { borderColor: '#483268', borderWidth: 2 },
   modalHeading: { flex: 1 },
+  filters: { flexDirection: 'row', gap: 8, marginTop: 22 },
+  filterButton: { flex: 1, minWidth: 0, minHeight: 64, alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 15, borderWidth: 1, borderColor: '#E1DDE7', backgroundColor: '#FFFFFF' },
+  filterActive: { backgroundColor: '#463557', borderColor: '#463557' },
+  filterPressed: { opacity: 0.8 },
+  filterLabel: { color: '#70657A', fontSize: 12, fontWeight: '700' },
+  filterCount: { color: '#463557', fontSize: 19, fontWeight: '800' },
+  filterLabelActive: { color: '#FFFFFF' },
+  collectionHint: { color: '#7B7282', fontSize: 12, lineHeight: 19, marginBottom: 16 },
+  mascotStage: { width: '100%', alignItems: 'center', justifyContent: 'center', borderRadius: 15, marginTop: 12 },
+  emptyCollection: { alignItems: 'center', paddingHorizontal: 20, paddingVertical: 42, borderRadius: 18, backgroundColor: '#F5F2F8', gap: 10 },
+  emptyCollectionTitle: { color: '#47384F', fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  emptyCollectionText: { color: '#7A6E82', fontSize: 13, lineHeight: 21, textAlign: 'center' },
   content: { paddingHorizontal: HORIZONTAL_PADDING, paddingBottom: 44 },
   gridRow: { gap: COLUMN_GAP, marginBottom: 10 },
   header: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -287,7 +336,7 @@ const styles = StyleSheet.create({
   intro: { paddingTop: 20, paddingBottom: 5 },
   eyebrow: { color: '#7666D8', fontSize: 10, fontWeight: '800', letterSpacing: 1.1 },
   introTitle: { marginTop: 8, color: '#2D2840', fontSize: 25, lineHeight: 33, fontWeight: '900' },
-  introDescription: { marginTop: 9, color: '#777086', fontSize: 12, lineHeight: 18 },
+  introDescription: { marginTop: 9, color: '#777086', fontSize: 13, lineHeight: 18 },
   progressCard: { marginTop: 18, padding: 18, borderWidth: 1, borderColor: '#E6E0FA', borderRadius: 22, backgroundColor: '#F3EFF7' },
   progressHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   progressLabel: { color: '#82799C', fontSize: 12 },
@@ -301,13 +350,13 @@ const styles = StyleSheet.create({
   remaining: { color: '#5C3DFF', fontSize: 11, fontWeight: '700' },
   sectionHeader: { marginTop: 25, marginBottom: 13, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 },
   sectionTitle: { color: '#272331', fontSize: 17, fontWeight: '800' },
-  sectionHint: { flexShrink: 1, color: '#948DA3', fontSize: 10, textAlign: 'right' },
-  mascotCard: { minHeight: 262, alignItems: 'center', padding: 11, overflow: 'hidden', borderWidth: 1, borderColor: '#E4E1E8', borderRadius: 19, backgroundColor: '#F7F7F8' },
+  sectionHint: { flexShrink: 1, color: '#796F84', fontSize: 11, textAlign: 'right' },
+  mascotCard: { minHeight: 290, alignItems: 'center', padding: 11, overflow: 'hidden', borderWidth: 1, borderColor: '#E4E1E8', borderRadius: 19, backgroundColor: '#F7F7F8' },
   unlockedCard: { borderColor: '#D9D1E6', backgroundColor: '#FFFFFF' },
   pressedCard: { opacity: 0.78, transform: [{ scale: 0.985 }] },
-  cardTopRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 5 },
+  cardTopRow: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 5 },
   status: { paddingVertical: 4, paddingHorizontal: 7, overflow: 'hidden', borderRadius: 999, backgroundColor: '#E1DFE4', color: '#66616D', fontSize: 10, fontWeight: '800' },
-  unlockedStatus: { backgroundColor: '#DED7FF', color: '#5C3DFF' },
+  unlockedStatus: { backgroundColor: '#E7F2EC', color: '#365B48' },
   cardCode: { flexShrink: 1, color: '#777080', fontSize: 10, fontWeight: '600' },
   regionName: { minHeight: 40, marginTop: 7, color: '#443552', fontSize: 13, lineHeight: 19, fontWeight: '800', textAlign: 'center' },
   lockedRegionName: { color: '#5E5966' },
