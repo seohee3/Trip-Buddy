@@ -204,38 +204,7 @@ export async function requestTourPlaces(request: TourApiRequest): Promise<TourAp
     params.set('radius', String(summary.radius));
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${TOUR_API_BASE_URL}/${request.endpoint}?${params.toString()}`);
-  } catch {
-    throw new TourApiRequestError('network', '관광공사 API에 연결하지 못했습니다.');
-  }
-
-  if (!response.ok) {
-    throw new TourApiRequestError('http', '관광공사 API 요청에 실패했습니다.');
-  }
-
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    throw new TourApiRequestError('invalid-response', '관광공사 API 응답 형식을 확인할 수 없습니다.');
-  }
-
-  if (!isRecord(data) || !isRecord(data.response) || !isRecord(data.response.header)) {
-    throw new TourApiRequestError('invalid-response', '관광공사 API 응답 형식을 확인할 수 없습니다.');
-  }
-
-  const resultCode = text(data.response.header.resultCode);
-  if (resultCode !== '0000') {
-    throw new TourApiRequestError(
-      'api',
-      '관광공사 API가 요청을 처리하지 못했습니다.',
-      resultCode || null,
-    );
-  }
-
-  const parsed = parseItems(data.response.body);
+  const { parsed, resultCode } = await requestTourItems(request.endpoint, params);
   const places = parsed.items
     .map(normalizeItem)
     .filter((place): place is TourPlace => place !== null);
@@ -315,4 +284,77 @@ export async function fetchLocationBasedTourPlaces({
     numOfRows,
     pageNo,
   });
+}
+
+async function requestTourItems(endpoint: TourApiEndpoint | 'detailCommon2', params: URLSearchParams, signal?: AbortSignal) {
+  let response: Response;
+  try {
+    response = await fetch(`${TOUR_API_BASE_URL}/${endpoint}?${params.toString()}`, { signal });
+  } catch {
+    throw new TourApiRequestError('network', '관광공사 API에 연결하지 못했습니다.');
+  }
+
+  if (!response.ok) {
+    throw new TourApiRequestError('http', '관광공사 API 요청에 실패했습니다.');
+  }
+
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    throw new TourApiRequestError('invalid-response', '관광공사 API 응답 형식을 확인할 수 없습니다.');
+  }
+
+  if (!isRecord(data) || !isRecord(data.response) || !isRecord(data.response.header)) {
+    throw new TourApiRequestError('invalid-response', '관광공사 API 응답 형식을 확인할 수 없습니다.');
+  }
+
+  const resultCode = text(data.response.header.resultCode);
+  if (resultCode !== '0000') {
+    throw new TourApiRequestError(
+      'api',
+      '관광공사 API가 요청을 처리하지 못했습니다.',
+      resultCode || null,
+    );
+  }
+
+  const parsed = parseItems(data.response.body);
+  return { parsed, resultCode };
+}
+
+/** Render API markup as plain text on native and web, without executing HTML. */
+export function normalizeTourOverview(value: unknown): string {
+  const entities: Record<string, string> = {
+    nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'",
+    middot: '·', bull: '•', ndash: '–', mdash: '—',
+    lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”', hellip: '…',
+  };
+  return text(value)
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
+    .replace(/<br\b[^>]*>|<\/?(?:p|div|li|ul|ol|h[1-6])\b[^>]*>/gi, '\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&(#x[\da-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
+      if (!entity.startsWith('#')) return entities[entity.toLowerCase()] ?? match;
+      const code = entity[1].toLowerCase() === 'x'
+        ? parseInt(entity.slice(2), 16) : Number(entity.slice(1));
+      return code > 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff)
+        ? String.fromCodePoint(code) : '';
+    })
+    .replace(/\r\n?/g, '\n')
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+export async function fetchTourPlaceOverview(contentId: string, signal?: AbortSignal): Promise<string> {
+  if (!contentId.trim()) return '';
+  const params = new URLSearchParams({
+    MobileOS: 'ETC', MobileApp: 'TripBuddy', _type: 'json',
+    serviceKey: getTourApiKey(), contentId: contentId.trim(),
+    numOfRows: '1', pageNo: '1',
+  });
+  const { parsed } = await requestTourItems('detailCommon2', params, signal);
+  const item = parsed.items.find((value) => isRecord(value) && String(value.contentid) === contentId.trim());
+  return normalizeTourOverview(isRecord(item) ? item.overview : undefined);
 }

@@ -1,3 +1,4 @@
+import { fetchTourPlaceOverview } from '@/src/api/tourApi';
 import { Alert } from '@/src/utils/alert';
 import { useEffect, useState } from 'react';
 import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -58,6 +59,30 @@ export default function PlaceDetailScreen() {
     && params.mapY !== '';
 
   const [isFavorite, setIsFavorite] = useState(false);
+  const [description, setDescription] = useState<{ id: string; text: string; loading: boolean }>({
+    id, text: '', loading: Boolean(id),
+  });
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    setDescription({ id, text: '', loading: Boolean(id) });
+    if (!id) return () => { active = false; };
+    const timer = setTimeout(() => {
+      active = false;
+      controller.abort();
+      setDescription({ id, text: '', loading: false });
+    }, 12000);
+    void fetchTourPlaceOverview(id, controller.signal)
+      .then((text) => { if (active) setDescription({ id, text, loading: false }); })
+      .catch(() => { if (active) setDescription({ id, text: '', loading: false }); })
+      .finally(() => clearTimeout(timer));
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [id]);
 
   useEffect(() => {
     if (!id) {
@@ -179,8 +204,9 @@ export default function PlaceDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>장소 소개</Text>
             <Text style={styles.sectionText}>
-              현재 관광공사 API에서 받은 기본정보를 표시하고 있어요. 운영 시간과 이용 정보는
-              방문 전에 공식 안내 또는 지도에서 다시 확인해주세요.
+              {description.id !== id || description.loading
+                ? '장소 소개를 불러오는 중이에요…'
+                : description.text || '현재 관광공사 API에서 받은 기본정보를 표시하고 있어요. 운영 시간과 이용 정보는 방문 전에 공식 안내 또는 지도에서 다시 확인해주세요.'}
             </Text>
           </View>
 
