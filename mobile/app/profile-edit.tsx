@@ -1,7 +1,8 @@
+import { Alert } from '@/src/utils/alert';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTravelData } from '@/src/context/TravelDataContext';
 
@@ -29,12 +30,18 @@ export default function ProfileEditScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
+      base64: Platform.OS === 'web',
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
 
-    if (!result.canceled && result.assets[0]?.uri) setImage(result.assets[0].uri);
+    if (!result.canceled && result.assets[0]?.uri) {
+      const asset = result.assets[0];
+      setImage(Platform.OS === 'web' && asset.base64
+        ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}`
+        : asset.uri);
+    }
   };
 
   const save = async () => {

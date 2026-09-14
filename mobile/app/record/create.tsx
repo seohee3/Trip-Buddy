@@ -1,7 +1,8 @@
+import { Alert } from '@/src/utils/alert';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTravelData } from '@/src/context/TravelDataContext';
 import { getFullRegionName, REGIONS } from '@/src/data/regions';
@@ -37,12 +38,15 @@ export default function CreateRecordScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
+      base64: Platform.OS === 'web',
       allowsMultipleSelection: true,
       selectionLimit: 0,
       quality: 0.8,
     });
 
-    if (!result.canceled) setImages(result.assets.map((asset) => asset.uri).filter(Boolean));
+    if (!result.canceled) setImages(result.assets.map((asset) => Platform.OS === 'web' && asset.base64
+      ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}`
+      : asset.uri).filter(Boolean));
   };
 
   const openCalendar = () => {

@@ -1,7 +1,7 @@
+import { Alert } from '@/src/utils/alert';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   BackHandler,
   Pressable,
   ScrollView,

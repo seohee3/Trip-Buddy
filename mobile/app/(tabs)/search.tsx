@@ -15,7 +15,7 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { searchTourPlaces, type TourPlace } from '../../src/api/tourApi';
+import { requestTourPlaces, type TourPlace } from '../../src/api/tourApi';
 
 type CategoryCode = '' | '12' | '14' | '15' | '39';
 
@@ -40,129 +40,6 @@ const CATEGORY_LIST: { code: CategoryCode; label: string }[] = [
   { code: '39', label: '맛집' },
 ];
 
-const SAMPLE_PLACES: Place[] = [
-  {
-    id: '1',
-    title: '서호',
-    areaName: '항저우',
-    sigunguName: '시후구',
-    address: '중국 저장성 항저우시 시후구',
-    contentTypeId: '12',
-    image:
-      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=700&q=80',
-    rating: 4.9,
-    distance: 2.1,
-  },
-  {
-    id: '2',
-    title: '허팡제 거리',
-    areaName: '항저우',
-    sigunguName: '상청구',
-    address: '중국 저장성 항저우시 상청구 허팡제',
-    contentTypeId: '14',
-    image:
-      'https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=700&q=80',
-    rating: 4.6,
-    distance: 3.5,
-  },
-  {
-    id: '3',
-    title: '우린 야시장',
-    areaName: '항저우',
-    sigunguName: '궁수구',
-    address: '중국 저장성 항저우시 우린광장 인근',
-    contentTypeId: '39',
-    image:
-      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=700&q=80',
-    rating: 4.5,
-    distance: 4.2,
-  },
-  {
-    id: '4',
-    title: '칭산호',
-    areaName: '항저우',
-    sigunguName: '린안구',
-    address: '중국 저장성 항저우시 린안구 칭산호',
-    contentTypeId: '12',
-    image:
-      'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=700&q=80',
-    rating: 4.8,
-    distance: 7.4,
-  },
-  {
-    id: '5',
-    title: '항저우 박물관',
-    areaName: '항저우',
-    sigunguName: '상청구',
-    address: '중국 저장성 항저우시 박물관 거리',
-    contentTypeId: '14',
-    image:
-      'https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=700&q=80',
-    rating: 4.4,
-    distance: 2.8,
-  },
-  {
-    id: '6',
-    title: '서호 음악분수',
-    areaName: '항저우',
-    sigunguName: '시후구',
-    address: '중국 저장성 항저우시 서호 인근',
-    contentTypeId: '15',
-    image:
-      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=700&q=80',
-    rating: 4.7,
-    distance: 2.6,
-  },
-  {
-    id: '7',
-    title: '광교호수공원',
-    areaName: '경기도',
-    sigunguName: '수원시',
-    address: '경기도 수원시 영통구 광교호수로 165',
-    contentTypeId: '12',
-    image:
-      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=700&q=80',
-    rating: 4.8,
-    distance: 1.7,
-  },
-  {
-    id: '8',
-    title: '수원화성',
-    areaName: '경기도',
-    sigunguName: '수원시',
-    address: '경기도 수원시 장안구 영화동',
-    contentTypeId: '14',
-    image:
-      'https://images.unsplash.com/photo-1538485399081-7c897c0e7efc?auto=format&fit=crop&w=700&q=80',
-    rating: 4.9,
-    distance: 2.3,
-  },
-  {
-    id: '9',
-    title: '성산일출봉',
-    areaName: '제주도',
-    sigunguName: '서귀포시',
-    address: '제주특별자치도 서귀포시 성산읍',
-    contentTypeId: '12',
-    image:
-      'https://images.unsplash.com/photo-1548115184-bc6544d06a58?auto=format&fit=crop&w=700&q=80',
-    rating: 4.9,
-    distance: 5.2,
-  },
-  {
-    id: '10',
-    title: '제주 향토음식점',
-    areaName: '제주도',
-    sigunguName: '제주시',
-    address: '제주특별자치도 제주시 연동',
-    contentTypeId: '39',
-    image:
-      'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=700&q=80',
-    rating: 4.6,
-    distance: 1.9,
-  },
-];
-
 function getCategoryLabel(code: string) {
   return CATEGORY_LIST.find((category) => category.code === code)?.label ?? '관광지';
 }
@@ -170,9 +47,10 @@ function getCategoryLabel(code: string) {
 export default function SearchScreen() {
   const [searchInput, setSearchInput] = useState('');
   const [appliedKeyword, setAppliedKeyword] = useState('');
+  const [searchRequest, setSearchRequest] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<CategoryCode>('');
 
-  const [places, setPlaces] = useState<Place[]>(SAMPLE_PLACES);
+  const [places, setPlaces] = useState<Place[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -194,42 +72,30 @@ export default function SearchScreen() {
     });
   }, [appliedKeyword, selectedCategory, places]);
 
-  const loadTourPlaces = async (keyword: string) => {
-    const trimmedKeyword = keyword.trim();
-
-    if (!trimmedKeyword) {
-      setPlaces(SAMPLE_PLACES);
-      setAppliedKeyword('');
-      setErrorMessage('');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setErrorMessage('');
-
-      const result = await searchTourPlaces(trimmedKeyword);
-
-      setPlaces(result);
-      setAppliedKeyword(trimmedKeyword);
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('관광공사 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
-      setPlaces([]);
-      setAppliedKeyword(trimmedKeyword);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    let active = true;
+    setIsLoading(true);
+    setErrorMessage('');
+    setPlaces([]);
+    void requestTourPlaces({
+      endpoint: appliedKeyword ? 'searchKeyword2' : 'areaBasedList2',
+      keyword: appliedKeyword,
+      contentTypeId: selectedCategory,
+    }).then((result) => {
+      if (active) setPlaces(result.places);
+    }).catch(() => {
+      if (active) setErrorMessage('관광공사 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+    }).finally(() => {
+      if (active) setIsLoading(false);
+    });
+    return () => { active = false; };
+  }, [appliedKeyword, selectedCategory, searchRequest]);
 
   const submitSearch = () => {
     Keyboard.dismiss();
-    loadTourPlaces(searchInput);
+    setAppliedKeyword(searchInput.trim());
+    setSearchRequest((request) => request + 1);
   };
-
-  useEffect(() => {
-    loadTourPlaces('항저우');
-  }, []);
 
   const openPlaceDetail = (place: Place) => {
     router.push({

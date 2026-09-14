@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Image,
   Linking,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -166,11 +167,24 @@ export default function NearbyScreen() {
         return;
       }
 
-      let permission = await Location.getForegroundPermissionsAsync();
+      let permission: Location.LocationPermissionResponse;
+      try {
+        permission = await Location.getForegroundPermissionsAsync();
+      } catch (error) {
+        if (Platform.OS !== 'web') throw error;
+        // Some browsers expose geolocation without the Permissions query API.
+        permission = { status: Location.PermissionStatus.UNDETERMINED, granted: false, canAskAgain: true, expires: 'never' };
+      }
       if (!canUpdate()) return;
       if (permission.status !== 'granted' && requestPermission && permission.canAskAgain) {
         setLoadState('checking-permission');
-        permission = await Location.requestForegroundPermissionsAsync();
+        if (Platform.OS === 'web') {
+          // Request through geolocation itself, with a bounded wait and no Permissions API dependency.
+          await withTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }), LOCATION_TIMEOUT_MS);
+          permission = { status: Location.PermissionStatus.GRANTED, granted: true, canAskAgain: true, expires: 'never' };
+        } else {
+          permission = await Location.requestForegroundPermissionsAsync();
+        }
       }
       if (!canUpdate()) return;
       if (permission.status !== 'granted') {
@@ -561,6 +575,9 @@ function LocationStateBox({
   onOpenSettings: () => void;
   onRetry: () => void;
 }) {
+  if (Platform.OS === 'web' && ['permission-denied', 'permission-blocked', 'services-disabled', 'location-error'].includes(state)) {
+    return <StateBox icon="settings-outline" title="브라우저 위치 권한을 확인해주세요" description="주소창의 사이트 설정에서 위치를 허용하고 기기의 위치 서비스를 켠 뒤 다시 시도해주세요. 위치 기능은 HTTPS 연결에서 사용할 수 있어요." buttonLabel="다시 시도" onPress={onRequestPermission} />;
+  }
   if (state === 'permission-required' || state === 'permission-denied') {
     return (
       <StateBox

@@ -1,6 +1,7 @@
+import { Alert } from '@/src/utils/alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTravelData } from '@/src/context/TravelDataContext';
 import { getRecordRegionName } from '@/src/utils/travel';

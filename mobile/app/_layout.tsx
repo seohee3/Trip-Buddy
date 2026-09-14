@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/src/context/AuthContext';
 import { TravelDataProvider } from '@/src/context/TravelDataContext';
 import { TravelTypeProvider, useTravelType } from '@/src/context/TravelTypeContext';
 import { resolveAppAccess } from '@/src/travel-type/routing';
+import AuthLoadingScreen from './auth-loading';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -38,10 +39,13 @@ function AppNavigator() {
     onboardingCompleted,
   );
 
+  // Wait for session restoration before resolving guards to preserve direct URLs.
+  if (access === 'loading') return <AuthLoadingScreen />;
+
   return (
     <TravelDataProvider key={user?.uid ?? 'signed-out'}>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={access === 'loading'}>
+        <Stack.Protected guard={false}>
           <Stack.Screen name="auth-loading" />
         </Stack.Protected>
 

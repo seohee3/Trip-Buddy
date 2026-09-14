@@ -1,5 +1,6 @@
+import { Alert } from '@/src/utils/alert';
 import { useEffect, useState } from 'react';
-import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -118,7 +119,7 @@ export default function PlaceDetailScreen() {
     const appUrl = `kakaomap://look?p=${latitude},${longitude}`;
     const webUrl = `https://map.kakao.com/link/map/${encodeURIComponent(title)},${latitude},${longitude}`;
     try {
-      const canOpenApp = await Linking.canOpenURL(appUrl);
+      const canOpenApp = Platform.OS !== 'web' && await Linking.canOpenURL(appUrl);
       await Linking.openURL(canOpenApp ? appUrl : webUrl);
     } catch {
       try {
