@@ -1,3 +1,4 @@
+import { useAuth } from '@/src/context/AuthContext';
 import { fetchTourPlaceOverview } from '@/src/api/tourApi';
 import { Alert } from '@/src/utils/alert';
 import { useEffect, useState } from 'react';
@@ -22,6 +23,7 @@ const COLORS = {
 };
 
 export default function PlaceDetailScreen() {
+  const { user } = useAuth();
   const params = useLocalSearchParams<{
     id?: string;
     title?: string;
@@ -85,16 +87,18 @@ export default function PlaceDetailScreen() {
   }, [id]);
 
   useEffect(() => {
-    if (!id) {
-      return;
+    let active = true;
+    setIsFavorite(false);
+    if (id && user) {
+      void isFavoritePlace(user.uid, id)
+        .then(value => { if (active) setIsFavorite(value); })
+        .catch(() => { if (active) setIsFavorite(false); });
     }
-
-    isFavoritePlace(id)
-      .then(setIsFavorite)
-      .catch(() => setIsFavorite(false));
-  }, [id]);
+    return () => { active = false; };
+  }, [id, user]);
 
   const toggleFavorite = async () => {
+    if (!user) return;
     if (!id) {
       Alert.alert('오류', '장소 정보를 찾을 수 없어요.');
       return;
@@ -102,13 +106,13 @@ export default function PlaceDetailScreen() {
 
     try {
       if (isFavorite) {
-        await removeFavoritePlace(id);
+        await removeFavoritePlace(user.uid, id);
         setIsFavorite(false);
         Alert.alert('찜 해제', '찜한 장소에서 삭제했어요.');
         return;
       }
 
-      await addFavoritePlace({
+      await addFavoritePlace(user.uid, {
         id,
         title,
         areaName,

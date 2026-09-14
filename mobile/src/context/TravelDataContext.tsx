@@ -8,7 +8,6 @@ import {
 } from '@/src/firebase/profileRepository';
 import type { FavoritePlace, TravelRecord, UserProfile } from '@/src/types/travel';
 import {
-  DEFAULT_RECORDS,
   createDefaultUserProfile,
   loadTravelData,
   persistFavorites,
@@ -78,7 +77,7 @@ export function TravelDataProvider({ children }: PropsWithChildren) {
         console.error('여행 데이터 로딩 오류:', error);
         if (mounted) {
           setProfile(profileFallback);
-          setRecords(DEFAULT_RECORDS);
+          setRecords([]);
           setFavorites([]);
           setStorageError('저장된 데이터를 불러오지 못했습니다. 기본 데이터를 표시합니다.');
         }
@@ -144,10 +143,11 @@ export function TravelDataProvider({ children }: PropsWithChildren) {
         })();
       },
       addRecord: async (record) => {
+        if (!user) throw new Error('로그인이 필요합니다.');
         const normalizedRecord = migrateTravelRecord(record, 0) ?? record;
         const nextRecords = [normalizedRecord, ...records];
         try {
-          await persistRecords(nextRecords);
+          await persistRecords(user.uid, nextRecords);
           setRecords(nextRecords);
           setStorageError(null);
         } catch (error) {
@@ -157,9 +157,10 @@ export function TravelDataProvider({ children }: PropsWithChildren) {
         }
       },
       deleteRecord: async (recordId) => {
+        if (!user) throw new Error('로그인이 필요합니다.');
         const nextRecords = records.filter((record) => record.id !== recordId);
         try {
-          await persistRecords(nextRecords);
+          await persistRecords(user.uid, nextRecords);
           setRecords(nextRecords);
           setStorageError(null);
         } catch (error) {
@@ -169,9 +170,10 @@ export function TravelDataProvider({ children }: PropsWithChildren) {
         }
       },
       addFavorite: async (favorite) => {
+        if (!user) throw new Error('로그인이 필요합니다.');
         const nextFavorites = [favorite, ...favorites.filter((item) => item.id !== favorite.id)];
         try {
-          await persistFavorites(nextFavorites);
+          await persistFavorites(user.uid, nextFavorites);
           setFavorites(nextFavorites);
           setStorageError(null);
         } catch (error) {
@@ -181,9 +183,10 @@ export function TravelDataProvider({ children }: PropsWithChildren) {
         }
       },
       removeFavorite: async (favoriteId) => {
+        if (!user) throw new Error('로그인이 필요합니다.');
         const nextFavorites = favorites.filter((favorite) => favorite.id !== favoriteId);
         try {
-          await persistFavorites(nextFavorites);
+          await persistFavorites(user.uid, nextFavorites);
           setFavorites(nextFavorites);
           setStorageError(null);
         } catch (error) {

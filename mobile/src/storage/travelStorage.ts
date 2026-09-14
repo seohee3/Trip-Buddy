@@ -12,6 +12,12 @@ const USER_PROFILE_KEY_PREFIX = '@trip-buddy/profile/';
 const RECORDS_KEY = '@trip-buddy/travel-records';
 const FAVORITES_KEY = '@trip-buddy/favorite-places';
 
+// Legacy unscoped keys remain untouched: their owner cannot be established safely.
+export function userStorageKey(baseKey: string, uid: string) {
+  if (!uid?.trim()) throw new Error('저장된 여행 데이터를 사용하려면 로그인이 필요합니다.');
+  return baseKey + '/' + encodeURIComponent(uid);
+}
+
 const DEFAULT_PROFILE_IMAGE =
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80';
 
@@ -198,9 +204,11 @@ export async function loadUserProfile(uid: string, fallback: UserProfile): Promi
 }
 
 export async function loadTravelData(uid: string, profileFallback: UserProfile): Promise<StoredData> {
+  const recordsKey = userStorageKey(RECORDS_KEY, uid);
+  const favoritesKey = userStorageKey(FAVORITES_KEY, uid);
   const [profile, storedValues] = await Promise.all([
     loadUserProfile(uid, profileFallback),
-    AsyncStorage.multiGet([RECORDS_KEY, FAVORITES_KEY]),
+    AsyncStorage.multiGet([recordsKey, favoritesKey]),
   ]);
 
   const storedData = storedValues.reduce<Record<string, string | null>>(
@@ -211,18 +219,18 @@ export async function loadTravelData(uid: string, profileFallback: UserProfile):
     {},
   );
 
-  const recordsValue = storedData[RECORDS_KEY] ?? null;
-  const favoritesValue = storedData[FAVORITES_KEY] ?? null;
+  const recordsValue = storedData[recordsKey] ?? null;
+  const favoritesValue = storedData[favoritesKey] ?? null;
 
-  const storedRecords = parseJson<unknown>(recordsValue, DEFAULT_RECORDS);
-  const records = migrateTravelRecords(storedRecords);
+  const storedRecords = parseJson<unknown>(recordsValue, []);
+  const records = Array.isArray(storedRecords) ? migrateTravelRecords(storedRecords) : [];
   const favorites = parseJson(favoritesValue, [] as FavoritePlace[]);
 
   const writes: Promise<void>[] = [];
   if (!recordsValue || JSON.stringify(records) !== JSON.stringify(storedRecords)) {
-    writes.push(AsyncStorage.setItem(RECORDS_KEY, JSON.stringify(records)));
+    writes.push(AsyncStorage.setItem(recordsKey, JSON.stringify(records)));
   }
-  if (!favoritesValue) writes.push(AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites)));
+  if (!favoritesValue) writes.push(AsyncStorage.setItem(favoritesKey, JSON.stringify(favorites)));
   await Promise.all(writes);
 
   return { profile, records, favorites };
@@ -232,10 +240,12 @@ export async function persistProfile(uid: string, profile: UserProfile) {
   await AsyncStorage.setItem(userProfileKey(uid), JSON.stringify(profile));
 }
 
-export async function persistRecords(records: TravelRecord[]) {
-  await AsyncStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+export async function persistRecords(uid: string, records: TravelRecord[]) {
+  const recordsKey = userStorageKey(RECORDS_KEY, uid);
+  await AsyncStorage.setItem(recordsKey, JSON.stringify(records));
 }
 
-export async function persistFavorites(favorites: FavoritePlace[]) {
-  await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+export async function persistFavorites(uid: string, favorites: FavoritePlace[]) {
+  const favoritesKey = userStorageKey(FAVORITES_KEY, uid);
+  await AsyncStorage.setItem(favoritesKey, JSON.stringify(favorites));
 }

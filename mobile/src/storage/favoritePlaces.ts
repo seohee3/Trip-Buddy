@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { userStorageKey } from './travelStorage';
 
 export type FavoritePlace = {
   id: string;
@@ -14,28 +15,29 @@ export type FavoritePlace = {
 
 const FAVORITE_PLACES_KEY = 'TRIP_BUDDY_FAVORITE_PLACES';
 
-export async function getFavoritePlaces(): Promise<FavoritePlace[]> {
-  const saved = await AsyncStorage.getItem(FAVORITE_PLACES_KEY);
+export async function getFavoritePlaces(uid: string): Promise<FavoritePlace[]> {
+  const saved = await AsyncStorage.getItem(userStorageKey(FAVORITE_PLACES_KEY, uid));
 
   if (!saved) {
     return [];
   }
 
   try {
-    return JSON.parse(saved);
+    const places: unknown = JSON.parse(saved);
+    return Array.isArray(places) ? places : [];
   } catch {
     return [];
   }
 }
 
-export async function isFavoritePlace(placeId: string): Promise<boolean> {
-  const places = await getFavoritePlaces();
+export async function isFavoritePlace(uid: string, placeId: string): Promise<boolean> {
+  const places = await getFavoritePlaces(uid);
 
   return places.some((place) => place.id === placeId);
 }
 
-export async function addFavoritePlace(place: FavoritePlace) {
-  const places = await getFavoritePlaces();
+export async function addFavoritePlace(uid: string, place: FavoritePlace) {
+  const places = await getFavoritePlaces(uid);
   const alreadyExists = places.some((savedPlace) => savedPlace.id === place.id);
 
   if (alreadyExists) {
@@ -44,16 +46,16 @@ export async function addFavoritePlace(place: FavoritePlace) {
 
   const nextPlaces = [place, ...places];
 
-  await AsyncStorage.setItem(FAVORITE_PLACES_KEY, JSON.stringify(nextPlaces));
+  await AsyncStorage.setItem(userStorageKey(FAVORITE_PLACES_KEY, uid), JSON.stringify(nextPlaces));
 
   return nextPlaces;
 }
 
-export async function removeFavoritePlace(placeId: string) {
-  const places = await getFavoritePlaces();
+export async function removeFavoritePlace(uid: string, placeId: string) {
+  const places = await getFavoritePlaces(uid);
   const nextPlaces = places.filter((place) => place.id !== placeId);
 
-  await AsyncStorage.setItem(FAVORITE_PLACES_KEY, JSON.stringify(nextPlaces));
+  await AsyncStorage.setItem(userStorageKey(FAVORITE_PLACES_KEY, uid), JSON.stringify(nextPlaces));
 
   return nextPlaces;
 }

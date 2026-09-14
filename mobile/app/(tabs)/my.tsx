@@ -16,27 +16,28 @@ import {
 } from '../../src/storage/favoritePlaces';
 
 export default function MyScreen() {
-  const { logout, isSubmitting } = useAuth();
+  const { user, logout, isSubmitting } = useAuth();
   const { profile, records, isLoading, deleteRecord } = useTravelData();
   const { travelType } = useTravelType();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [favoritePlaces, setFavoritePlaces] = useState<FavoritePlace[]>([]);
 
-  const loadFavoritePlaces = async () => {
+  const loadFavoritePlaces = useCallback(async () => {
+    if (!user) { setFavoritePlaces([]); return; }
     try {
-      const savedPlaces = await getFavoritePlaces();
+      const savedPlaces = await getFavoritePlaces(user.uid);
       setFavoritePlaces(savedPlaces);
     } catch (error) {
       console.error(error);
       setFavoritePlaces([]);
     }
-  };
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
-      loadFavoritePlaces();
-    }, []),
+      void loadFavoritePlaces();
+    }, [loadFavoritePlaces]),
   );
 
   const confirmDelete = (record: TravelRecord) => {
@@ -94,7 +95,8 @@ export default function MyScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
-            await removeFavoritePlace(place.id);
+            if (!user) return;
+            await removeFavoritePlace(user.uid, place.id);
             await loadFavoritePlaces();
           } catch (error) {
             console.error(error);
