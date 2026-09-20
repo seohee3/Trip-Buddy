@@ -6,6 +6,54 @@ import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, Vi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTravelData } from '@/src/context/TravelDataContext';
 
+
+const WEB_PROFILE_IMAGE_MAX_SIZE = 500;
+const WEB_PROFILE_IMAGE_QUALITY = 0.65;
+
+async function compressWebProfileImage(source: string): Promise<string> {
+  if (Platform.OS !== 'web') return source;
+
+  return new Promise((resolve, reject) => {
+    const imageElement = document.createElement('img');
+
+    imageElement.onload = () => {
+      const originalWidth = imageElement.naturalWidth || imageElement.width;
+      const originalHeight = imageElement.naturalHeight || imageElement.height;
+
+      const scale = Math.min(
+        1,
+        WEB_PROFILE_IMAGE_MAX_SIZE / Math.max(originalWidth, originalHeight),
+      );
+
+      const width = Math.max(1, Math.round(originalWidth * scale));
+      const height = Math.max(1, Math.round(originalHeight * scale));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext('2d');
+
+      if (!context) {
+        reject(new Error('프로필 이미지 압축을 위한 Canvas를 생성하지 못했습니다.'));
+        return;
+      }
+
+      context.fillStyle = '#FFFFFF';
+      context.fillRect(0, 0, width, height);
+      context.drawImage(imageElement, 0, 0, width, height);
+
+      resolve(canvas.toDataURL('image/jpeg', WEB_PROFILE_IMAGE_QUALITY));
+    };
+
+    imageElement.onerror = () => {
+      reject(new Error('프로필 이미지를 불러오지 못했습니다.'));
+    };
+
+    imageElement.src = source;
+  });
+}
+
 export default function ProfileEditScreen() {
   const { profile, isLoading, updateProfile } = useTravelData();
   const [name, setName] = useState('');
@@ -22,27 +70,49 @@ export default function ProfileEditScreen() {
   }, [isLoading, profile]);
 
   const pickProfileImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('사진 권한 필요', '프로필 사진을 선택하려면 사진 접근 권한을 허용해주세요.');
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+  if (!permission.granted) {
+    Alert.alert(
+      '사진 권한 필요',
+      '프로필 사진을 선택하려면 사진 접근 권한을 허용해주세요.',
+    );
+    return;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    base64: Platform.OS === 'web',
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.8,
+  });
+
+  if (result.canceled || !result.assets[0]) return;
+
+  try {
+    const asset = result.assets[0];
+
+    if (Platform.OS === 'web') {
+      const source = asset.base64
+        ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}`
+        : asset.uri;
+
+      const compressedImage = await compressWebProfileImage(source);
+      setImage(compressedImage);
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      base64: Platform.OS === 'web',
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+    setImage(asset.uri);
+  } catch (error) {
+    console.error('프로필 이미지 처리 오류:', error);
 
-    if (!result.canceled && result.assets[0]?.uri) {
-      const asset = result.assets[0];
-      setImage(Platform.OS === 'web' && asset.base64
-        ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}`
-        : asset.uri);
-    }
-  };
+    Alert.alert(
+      '사진 처리 실패',
+      '프로필 사진을 처리하지 못했습니다. 다른 사진으로 다시 시도해주세요.',
+    );
+  }
+};
 
   const save = async () => {
     const trimmedName = name.trim();
@@ -59,9 +129,26 @@ export default function ProfileEditScreen() {
         image,
       });
       Alert.alert('저장 완료', '프로필이 수정되었습니다.', [{ text: '확인', onPress: () => router.back() }]);
-    } catch {
-      Alert.alert('저장 실패', '프로필을 저장하지 못했습니다. 다시 시도해주세요.');
-    } finally {
+    } catch (error) {
+  console.error('프로필 저장 오류:', error);
+
+  const errorName =
+    typeof error === 'object' && error !== null && 'name' in error
+      ? String(error.name)
+      : '';
+
+  if (errorName === 'QuotaExceededError') {
+    Alert.alert(
+      '저장 공간 부족',
+      '프로필 사진 용량이 너무 큽니다. 다른 사진으로 다시 시도해주세요.',
+    );
+  } else {
+    Alert.alert(
+      '저장 실패',
+      '프로필을 저장하지 못했습니다. 다시 시도해주세요.',
+    );
+  }
+} finally {
       setIsSaving(false);
     }
   };
