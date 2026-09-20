@@ -10,6 +10,53 @@ import { createRecordId, displayDate } from '@/src/utils/travel';
 import type { TravelRecord } from '@/src/types/travel';
 
 const INITIAL_AREA = REGIONS.find((area) => area.code === '31') ?? REGIONS[0];
+const MAX_WEB_IMAGES = 3;
+const WEB_IMAGE_MAX_DIMENSION = 900;
+const WEB_IMAGE_QUALITY = 0.55;
+
+async function compressWebImage(source: string): Promise<string> {
+  if (Platform.OS !== 'web') return source;
+
+  return new Promise((resolve, reject) => {
+    const image = document.createElement('img');
+
+    image.onload = () => {
+      const originalWidth = image.naturalWidth || image.width;
+      const originalHeight = image.naturalHeight || image.height;
+
+      const scale = Math.min(
+        1,
+        WEB_IMAGE_MAX_DIMENSION / Math.max(originalWidth, originalHeight),
+      );
+
+      const width = Math.max(1, Math.round(originalWidth * scale));
+      const height = Math.max(1, Math.round(originalHeight * scale));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext('2d');
+      if (!context) {
+        reject(new Error('이미지 압축을 위한 Canvas를 생성하지 못했습니다.'));
+        return;
+      }
+
+      // 투명 PNG가 JPEG로 변환될 때 검게 보이는 것을 방지
+      context.fillStyle = '#FFFFFF';
+      context.fillRect(0, 0, width, height);
+      context.drawImage(image, 0, 0, width, height);
+
+      resolve(canvas.toDataURL('image/jpeg', WEB_IMAGE_QUALITY));
+    };
+
+    image.onerror = () => {
+      reject(new Error('선택한 이미지를 불러오지 못했습니다.'));
+    };
+
+    image.src = source;
+  });
+}
 
 export default function CreateRecordScreen() {
   const { addRecord, isLoading } = useTravelData();
@@ -30,24 +77,66 @@ export default function CreateRecordScreen() {
   }, [params.endDate, params.startDate]);
 
   const chooseImages = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('사진 권한 필요', '여행 사진을 선택하려면 사진 접근 권한을 허용해주세요.');
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+  if (!permission.granted) {
+    Alert.alert(
+      '사진 권한 필요',
+      '여행 사진을 선택하려면 사진 접근 권한을 허용해주세요.',
+    );
+    return;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    base64: Platform.OS === 'web',
+    allowsMultipleSelection: true,
+    selectionLimit: Platform.OS === 'web' ? MAX_WEB_IMAGES : 0,
+    quality: 0.8,
+  });
+
+  if (result.canceled) return;
+
+  try {
+    if (Platform.OS === 'web') {
+      const selectedAssets = result.assets.slice(0, MAX_WEB_IMAGES);
+
+      const compressedImages = await Promise.all(
+        selectedAssets.map(async (asset) => {
+          const source = asset.base64
+            ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}`
+            : asset.uri;
+
+          return compressWebImage(source);
+        }),
+      );
+
+      setImages(compressedImages);
+
+      if (result.assets.length > MAX_WEB_IMAGES) {
+        Alert.alert(
+          '사진 선택 안내',
+          `웹에서는 여행 기록당 최대 ${MAX_WEB_IMAGES}장의 사진을 저장할 수 있습니다.`,
+        );
+      }
+
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      base64: Platform.OS === 'web',
-      allowsMultipleSelection: true,
-      selectionLimit: 0,
-      quality: 0.8,
-    });
+    setImages(
+      result.assets
+        .map((asset) => asset.uri)
+        .filter((uri): uri is string => Boolean(uri)),
+    );
+  } catch (error) {
+    console.error('여행 사진 처리 오류:', error);
 
-    if (!result.canceled) setImages(result.assets.map((asset) => Platform.OS === 'web' && asset.base64
-      ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}`
-      : asset.uri).filter(Boolean));
-  };
+    Alert.alert(
+      '사진 처리 실패',
+      '선택한 사진을 처리하지 못했습니다. 다른 사진으로 다시 시도해주세요.',
+    );
+  }
+};
 
   const openCalendar = () => {
     router.push({ pathname: '/record/calendar', params: { startDate, endDate } });
@@ -93,9 +182,26 @@ export default function CreateRecordScreen() {
     try {
       await addRecord(record);
       Alert.alert('저장 완료', '여행 기록이 저장되었습니다.', [{ text: '확인', onPress: () => router.replace('/(tabs)/my') }]);
-    } catch {
-      Alert.alert('저장 실패', '여행 기록을 저장하지 못했습니다. 다시 시도해주세요.');
-    } finally {
+    } catch (error) {
+  console.error('여행 기록 저장 오류:', error);
+
+  const errorName =
+    typeof error === 'object' && error !== null && 'name' in error
+      ? String(error.name)
+      : '';
+
+  if (errorName === 'QuotaExceededError') {
+    Alert.alert(
+      '저장 공간 부족',
+      '사진 용량이 너무 큽니다. 사진 수를 줄이거나 다른 사진으로 다시 시도해주세요.',
+    );
+  } else {
+    Alert.alert(
+      '저장 실패',
+      '여행 기록을 저장하지 못했습니다. 다시 시도해주세요.',
+    );
+  }
+} finally {
       setIsSaving(false);
     }
   };
